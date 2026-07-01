@@ -102,6 +102,17 @@ create policy "v1 open holidays"     on holidays        for all using (true) wit
 create policy "v1 open settings"     on app_settings    for all using (true) with check (true);
 
 -- =============================================================
+-- Realtime — 변경사항을 접속 중인 모든 사용자에게 즉시(새로고침 없이) 전파
+--   재실행해도 오류 없이 안전 (이미 추가돼 있으면 무시)
+-- =============================================================
+do $$
+begin
+  alter publication supabase_realtime add table
+    employees, leave_requests, holidays, teams, leave_types, app_settings;
+exception when duplicate_object then null;
+end $$;
+
+-- =============================================================
 -- 샘플 데이터
 -- =============================================================
 insert into leave_types (leave_type_name, deduct_from_annual_leave, color_code, notes) values

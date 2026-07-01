@@ -135,6 +135,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let alive = true;
+    let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null = null;
+    let debounce: ReturnType<typeof setTimeout> | undefined;
+
     (async () => {
       try {
         const loaded = supabaseEnabled ? await loadCloud() : loadLocal();
@@ -145,9 +148,34 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (alive) setReady(true);
       }
+
+      // 실시간 동기화 — 다른 사용자가 바꾸면 새로고침 없이 즉시 반영
+      if (supabaseEnabled && supabase && alive) {
+        channel = supabase
+          .channel("hr-realtime")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public" },
+            () => {
+              // 짧게 디바운스 후 최신 데이터 재로드 (변경 폭주 방지)
+              clearTimeout(debounce);
+              debounce = setTimeout(() => {
+                loadCloud()
+                  .then((d) => {
+                    if (alive) setData(d);
+                  })
+                  .catch(() => {});
+              }, 250);
+            }
+          )
+          .subscribe();
+      }
     })();
+
     return () => {
       alive = false;
+      clearTimeout(debounce);
+      if (channel && supabase) supabase.removeChannel(channel);
     };
   }, []);
 
