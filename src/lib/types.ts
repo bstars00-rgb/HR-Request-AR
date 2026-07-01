@@ -34,7 +34,6 @@ export interface Employee {
   team: TeamName;
   position: Position;
   join_date: string; // YYYY-MM-DD
-  country: string; // 국가/지사 (연차 기본값 결정에 사용) — 한국/베트남/싱가포르 등
   annual_leave_entitlement: number; // 기본 연차 일수
   carried_over_leave: number; // 이월 연차
   employment_status: EmploymentStatus;
@@ -84,13 +83,6 @@ export interface LeaveType {
   notes: string;
 }
 
-// 국가/지사별 기본 연차 (신규 직원 추가 시 자동 채움)
-export interface Country {
-  id: string;
-  name: string; // 한국 / 베트남 / 싱가포르 ...
-  default_annual_leave: number;
-}
-
 export interface Settings {
   // 연차 계산 기본 기준
   exclude_weekends: boolean; // 주말 제외
@@ -104,18 +96,8 @@ export interface AppData {
   holidays: Holiday[];
   teams: Team[];
   leaveTypes: LeaveType[];
-  countries: Country[];
   settings: Settings;
 }
-
-// 기본 국가 + 국가별 표준 연차 (시드/폴백)
-export const DEFAULT_COUNTRIES: { name: string; default_annual_leave: number }[] =
-  [
-    { name: "한국", default_annual_leave: 15 },
-    { name: "베트남", default_annual_leave: 12 },
-    { name: "싱가포르", default_annual_leave: 14 },
-    { name: "기타", default_annual_leave: 15 },
-  ];
 
 export const TEAM_NAMES: TeamName[] = [
   "OP",

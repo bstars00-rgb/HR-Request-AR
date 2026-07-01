@@ -8,6 +8,7 @@ import {
   Card,
   PageHeader,
   Button,
+  Field,
   Input,
   Select,
   EmptyState,
@@ -24,37 +25,12 @@ export default function SettingsPage() {
     addTeam,
     updateTeam,
     deleteTeam,
-    addCountry,
-    updateCountry,
-    deleteCountry,
     addHoliday,
     deleteHoliday,
     resetAll,
   } = useStore();
   const { t } = useI18n();
   const [newTeam, setNewTeam] = useState("");
-  const [newCountry, setNewCountry] = useState("");
-
-  function handleAddCountry(e: React.FormEvent) {
-    e.preventDefault();
-    const name = newCountry.trim();
-    if (!name) return;
-    if (data.countries.some((c) => c.name === name)) {
-      alert(t("settings.dupCountry"));
-      return;
-    }
-    addCountry({ name, default_annual_leave: 15 });
-    setNewCountry("");
-  }
-
-  function handleDeleteCountry(id: string, name: string) {
-    const inUse = data.employees.filter((emp) => emp.country === name).length;
-    if (inUse > 0) {
-      alert(t("settings.countryInUse"));
-      return;
-    }
-    if (confirm(`${name} — ${t("settings.confirmDeleteCountry")}`)) deleteCountry(id);
-  }
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -133,59 +109,18 @@ export default function SettingsPage() {
                 className="h-4 w-4"
               />
             </label>
+            <Field label={t("settings.defaultLeave")}>
+              <Input
+                type="number"
+                step="0.5"
+                value={data.settings.default_annual_leave}
+                onChange={(e) =>
+                  updateSettings({ default_annual_leave: Number(e.target.value) })
+                }
+              />
+            </Field>
             <p className="text-xs text-slate-400">{t("settings.recalcNote")}</p>
           </div>
-        </Card>
-
-        {/* 국가별 기본 연차 */}
-        <Card className="p-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
-            {t("settings.countryDefaults")}
-          </h2>
-          <div className="space-y-2">
-            {data.countries.map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
-                <span className="flex-1 text-sm text-slate-700 dark:text-slate-200">
-                  {c.name}
-                </span>
-                <Input
-                  type="number"
-                  step="0.5"
-                  min={0}
-                  value={c.default_annual_leave}
-                  onChange={(e) =>
-                    updateCountry(c.id, {
-                      default_annual_leave: Number(e.target.value),
-                    })
-                  }
-                  className="w-20 text-right"
-                />
-                <span className="text-xs text-slate-400">{t("common.days")}</span>
-                <button
-                  onClick={() => handleDeleteCountry(c.id, c.name)}
-                  className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                  title={t("common.delete")}
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <form
-            onSubmit={handleAddCountry}
-            className="mt-3 flex gap-2 border-t border-slate-100 pt-3 dark:border-slate-800"
-          >
-            <Input
-              value={newCountry}
-              onChange={(e) => setNewCountry(e.target.value)}
-              placeholder={t("settings.countryNamePh")}
-              className="flex-1"
-            />
-            <Button type="submit">
-              <Plus size={16} /> {t("common.add")}
-            </Button>
-          </form>
-          <p className="mt-2 text-xs text-slate-400">{t("settings.countryNote")}</p>
         </Card>
 
         {/* 팀별 경고 기준 */}
