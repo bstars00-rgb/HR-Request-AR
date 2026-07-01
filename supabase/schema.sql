@@ -34,6 +34,7 @@ create table if not exists employees (
   team text not null,
   position text not null default 'Staff',
   join_date date,
+  country text default '한국',                     -- 국가/지사 (연차 기본값 결정)
   annual_leave_entitlement numeric not null default 15,
   carried_over_leave numeric not null default 0,
   employment_status text not null default '재직',
@@ -73,6 +74,13 @@ create table if not exists holidays (
   notes text default ''
 );
 
+-- ---------- Countries (국가별 기본 연차) ----------
+create table if not exists countries (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  default_annual_leave numeric not null default 15
+);
+
 -- ---------- App Settings (단일 행) ----------
 create table if not exists app_settings (
   id text primary key default 'singleton',
@@ -91,6 +99,7 @@ alter table leave_types enable row level security;
 alter table employees enable row level security;
 alter table leave_requests enable row level security;
 alter table holidays enable row level security;
+alter table countries enable row level security;
 alter table app_settings enable row level security;
 
 -- 1차: 모두 허용 (확장 시 이 정책만 교체)
@@ -99,6 +108,7 @@ create policy "v1 open leave_types"  on leave_types     for all using (true) wit
 create policy "v1 open employees"    on employees       for all using (true) with check (true);
 create policy "v1 open leaves"       on leave_requests  for all using (true) with check (true);
 create policy "v1 open holidays"     on holidays        for all using (true) with check (true);
+create policy "v1 open countries"    on countries       for all using (true) with check (true);
 create policy "v1 open settings"     on app_settings    for all using (true) with check (true);
 
 -- =============================================================
@@ -108,7 +118,7 @@ create policy "v1 open settings"     on app_settings    for all using (true) wit
 do $$
 begin
   alter publication supabase_realtime add table
-    employees, leave_requests, holidays, teams, leave_types, app_settings;
+    employees, leave_requests, holidays, teams, leave_types, countries, app_settings;
 exception when duplicate_object then null;
 end $$;
 
@@ -163,6 +173,13 @@ insert into holidays (date, country, holiday_name, applicable_team) values
   ('2026-08-09','싱가포르','National Day','ALL'),
   ('2026-09-25','한국','추석','ALL')
 on conflict do nothing;
+
+insert into countries (name, default_annual_leave) values
+  ('한국', 15),
+  ('베트남', 12),
+  ('싱가포르', 14),
+  ('기타', 15)
+on conflict (name) do nothing;
 
 insert into app_settings (id, exclude_weekends, exclude_holidays, default_annual_leave)
 values ('singleton', true, true, 15)

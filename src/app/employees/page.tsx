@@ -22,6 +22,7 @@ import {
   EmploymentStatus,
   POSITIONS,
   Position,
+  Country,
   Team,
   TeamName,
 } from "@/lib/types";
@@ -140,7 +141,10 @@ export default function EmployeesPage() {
                       <div className="font-medium text-slate-800 dark:text-slate-100">
                         {e.name}
                       </div>
-                      <div className="text-xs text-slate-400">{e.english_name}</div>
+                      <div className="text-xs text-slate-400">
+                        {e.english_name}
+                        {e.country ? ` · ${e.country}` : ""}
+                      </div>
                     </td>
                     <td className={td}>
                       <TeamChip team={e.team} />
@@ -208,6 +212,7 @@ export default function EmployeesPage() {
         <EmployeeFormModal
           initial={editing ?? undefined}
           teams={data.teams}
+          countries={data.countries}
           defaultLeave={data.settings.default_annual_leave}
           onClose={() => {
             setCreating(false);
@@ -228,24 +233,32 @@ export default function EmployeesPage() {
 function EmployeeFormModal({
   initial,
   teams,
+  countries,
   defaultLeave,
   onClose,
   onSubmit,
 }: {
   initial?: Employee;
   teams: Team[];
+  countries: Country[];
   defaultLeave: number;
   onClose: () => void;
   onSubmit: (payload: Omit<Employee, "id" | "created_at" | "updated_at">) => void;
 }) {
   const { t } = useI18n();
+  const initialCountry = initial?.country ?? countries[0]?.name ?? "한국";
+  const countryDefault =
+    countries.find((c) => c.name === initialCountry)?.default_annual_leave ??
+    defaultLeave;
+
   const [f, setF] = useState({
     name: initial?.name ?? "",
     english_name: initial?.english_name ?? "",
     team: initial?.team ?? teams[0]?.team_name ?? "",
     position: initial?.position ?? ("Staff" as Position),
     join_date: initial?.join_date ?? todayISO(),
-    annual_leave_entitlement: initial?.annual_leave_entitlement ?? defaultLeave,
+    country: initialCountry,
+    annual_leave_entitlement: initial?.annual_leave_entitlement ?? countryDefault,
     carried_over_leave: initial?.carried_over_leave ?? 0,
     employment_status: initial?.employment_status ?? ("재직" as EmploymentStatus),
     role: initial?.role ?? ("staff" as Employee["role"]),
@@ -254,6 +267,16 @@ function EmployeeFormModal({
 
   function set<K extends keyof typeof f>(k: K, v: (typeof f)[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
+  }
+
+  // 국가 선택 시 그 국가의 기본 연차로 자동 채움 (이후 개별 수정 가능)
+  function setCountry(name: string) {
+    const d = countries.find((c) => c.name === name)?.default_annual_leave;
+    setF((prev) => ({
+      ...prev,
+      country: name,
+      annual_leave_entitlement: d ?? prev.annual_leave_entitlement,
+    }));
   }
 
   return (
@@ -307,6 +330,16 @@ function EmployeeFormModal({
               value={f.join_date}
               onChange={(e) => set("join_date", e.target.value)}
             />
+          </Field>
+          <Field label={t("employees.field.country")}>
+            <Select value={f.country} onChange={(e) => setCountry(e.target.value)}>
+              {countries.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name} ({c.default_annual_leave}
+                  {t("common.days")})
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label={t("employees.field.status")}>
             <Select

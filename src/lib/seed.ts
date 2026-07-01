@@ -4,6 +4,8 @@
 
 import {
   AppData,
+  Country,
+  DEFAULT_COUNTRIES,
   Employee,
   Holiday,
   LeaveRequest,
@@ -91,6 +93,7 @@ TEAM_NAMES.forEach((team) => {
       team,
       position: positionsByIndex[i],
       join_date: `202${i + 1}-0${(i % 9) + 1}-15`,
+      country: "한국",
       annual_leave_entitlement: 15,
       carried_over_leave: i === 0 ? 3 : i === 1 ? 1 : 0,
       employment_status: "재직",
@@ -152,6 +155,12 @@ const leaves: LeaveRequest[] = [
   mk("조하늘", "Unpaid Leave", "2026-07-20", "2026-07-22", "none", "Approved", "개인 사정"),
 ];
 
+const countries: Country[] = DEFAULT_COUNTRIES.map((c) => ({
+  id: uid("cty"),
+  name: c.name,
+  default_annual_leave: c.default_annual_leave,
+}));
+
 export function buildSeed(): AppData {
   return {
     employees,
@@ -159,6 +168,7 @@ export function buildSeed(): AppData {
     holidays,
     teams,
     leaveTypes,
+    countries,
     settings: {
       exclude_weekends: true,
       exclude_holidays: true,

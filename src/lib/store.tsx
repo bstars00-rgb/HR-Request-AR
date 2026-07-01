@@ -19,6 +19,8 @@ import React, {
 } from "react";
 import {
   AppData,
+  Country,
+  DEFAULT_COUNTRIES,
   Employee,
   Holiday,
   LeaveRequest,
@@ -100,12 +102,34 @@ async function loadCloud(): Promise<AppData> {
       }
     : DEFAULT_SETTINGS;
 
+  // 국가 테이블은 마이그레이션 전이면 없을 수 있으므로 별도로 안전하게 로드
+  let countries: Country[] = [];
+  try {
+    const cty = await sb
+      .from("countries")
+      .select("*")
+      .order("name", { ascending: true });
+    if (cty.error) throw cty.error;
+    countries = (cty.data ?? []) as Country[];
+  } catch {
+    countries = [];
+  }
+  // 국가 테이블이 아직 없거나 비어 있으면 기본 국가로 폴백 (앱이 깨지지 않도록)
+  if (countries.length === 0) {
+    countries = DEFAULT_COUNTRIES.map((c, i) => ({
+      id: `cty_default_${i}`,
+      name: c.name,
+      default_annual_leave: c.default_annual_leave,
+    }));
+  }
+
   const data: AppData = {
     employees: (emp.data ?? []) as Employee[],
     leaves: (lv.data ?? []) as LeaveRequest[],
     holidays: (hol.data ?? []) as Holiday[],
     teams: (tm.data ?? []) as Team[],
     leaveTypes: (lt.data ?? []) as AppData["leaveTypes"],
+    countries,
     settings,
   };
   return recalcLeaves(data);
@@ -127,6 +151,9 @@ interface StoreCtx {
   addTeam: (t: Omit<Team, "id">) => void;
   updateTeam: (id: string, patch: Partial<Team>) => void;
   deleteTeam: (id: string) => void;
+  addCountry: (c: Omit<Country, "id">) => void;
+  updateCountry: (id: string, patch: Partial<Country>) => void;
+  deleteCountry: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   resetAll: () => void;
 }
@@ -388,6 +415,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (supabaseEnabled && sb) {
           sb.from("teams").delete().eq("id", id).then(({ error }) => {
             if (error) cloudFail("팀 삭제", error);
+          });
+        }
+      },
+
+      // ---------------- Countries (국가별 기본 연차) ----------------
+      addCountry: (c) => {
+        const country: Country = { ...c, id: newId("cty") };
+        commit({ ...data, countries: [...data.countries, country] });
+        if (supabaseEnabled && sb) {
+          sb.from("countries").insert(country).then(({ error }) => {
+            if (error) cloudFail("국가 추가", error);
+          });
+        }
+      },
+      updateCountry: (id, patch) => {
+        commit({
+          ...data,
+          countries: data.countries.map((c) =>
+            c.id === id ? { ...c, ...patch } : c
+          ),
+        });
+        if (supabaseEnabled && sb) {
+          sb.from("countries").update(patch).eq("id", id).then(({ error }) => {
+            if (error) cloudFail("국가 수정", error);
+          });
+        }
+      },
+      deleteCountry: (id) => {
+        commit({ ...data, countries: data.countries.filter((c) => c.id !== id) });
+        if (supabaseEnabled && sb) {
+          sb.from("countries").delete().eq("id", id).then(({ error }) => {
+            if (error) cloudFail("국가 삭제", error);
           });
         }
       },
