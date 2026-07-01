@@ -106,13 +106,16 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-2">
             {data.teams.map((tm) => (
-              <div key={tm.id} className="flex items-center gap-3">
-                <div className="w-24">
+              <div key={tm.id} className="flex flex-wrap items-center gap-2">
+                <div className="w-16">
                   <TeamChip team={tm.team_name} />
                 </div>
-                <span className="text-xs text-slate-400">
-                  {t("common.manager")} {tm.manager_name}
-                </span>
+                <Input
+                  value={tm.manager_name}
+                  onChange={(e) => updateTeam(tm.id, { manager_name: e.target.value })}
+                  placeholder={t("common.manager")}
+                  className="w-32"
+                />
                 <div className="ml-auto flex items-center gap-1">
                   <Input
                     type="number"
@@ -121,7 +124,7 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       updateTeam(tm.id, { warning_threshold: Number(e.target.value) })
                     }
-                    className="w-20 text-right"
+                    className="w-16 text-right"
                   />
                   <span className="text-xs text-slate-400">{t("settings.orMore")}</span>
                 </div>
