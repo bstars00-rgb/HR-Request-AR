@@ -21,12 +21,14 @@ import {
   TeamName,
 } from "@/lib/types";
 import { fmtDate } from "@/lib/date";
+import { summarizeEmployee } from "@/lib/leave-calc";
 
 export default function LeavesPage() {
   const { data, updateLeave, deleteLeave } = useStore();
   const { t, lang } = useI18n();
   const [team, setTeam] = useState<TeamName | "ALL">("ALL");
   const [status, setStatus] = useState<LeaveStatus | "ALL">("ALL");
+  const [emp, setEmp] = useState<string>("ALL");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<LeaveRequest | null>(null);
 
@@ -39,8 +41,16 @@ export default function LeavesPage() {
     return [...data.leaves]
       .filter((l) => (team === "ALL" ? true : l.team === team))
       .filter((l) => (status === "ALL" ? true : l.status === status))
+      .filter((l) => (emp === "ALL" ? true : l.employee_id === emp))
       .sort((a, b) => (a.start_date < b.start_date ? 1 : -1));
-  }, [data.leaves, team, status]);
+  }, [data.leaves, team, status, emp]);
+
+  // 특정 직원 선택 시 사용/잔여 요약
+  const selectedSummary = useMemo(() => {
+    if (emp === "ALL") return null;
+    const e = empById[emp];
+    return e ? summarizeEmployee(e, data) : null;
+  }, [emp, empById, data]);
 
   const th = "px-4 py-3 font-medium";
   const td = "px-4 py-3";
@@ -58,6 +68,14 @@ export default function LeavesPage() {
       />
 
       <Card className="mb-4 flex flex-wrap items-center gap-2 p-3">
+        <Select value={emp} onChange={(e) => setEmp(e.target.value)} className="w-auto">
+          <option value="ALL">{t("common.allEmployees")}</option>
+          {data.employees.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name} ({e.team})
+            </option>
+          ))}
+        </Select>
         <Select value={team} onChange={(e) => setTeam(e.target.value as any)} className="w-auto">
           <option value="ALL">{t("common.allTeams")}</option>
           {data.teams.map((tm) => (
@@ -74,6 +92,16 @@ export default function LeavesPage() {
             </option>
           ))}
         </Select>
+        {selectedSummary && (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {t("employees.col.used")} {selectedSummary.used}
+            {t("common.days")} · {t("employees.col.remaining")}{" "}
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              {selectedSummary.remaining}
+              {t("common.days")}
+            </span>
+          </span>
+        )}
         <span className="ml-auto text-xs text-slate-400">{rows.length}</span>
       </Card>
 
