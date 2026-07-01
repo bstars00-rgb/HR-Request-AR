@@ -15,6 +15,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import {
   AppData,
@@ -80,12 +81,13 @@ function loadLocal(): AppData {
 // ---------- Supabase 로더 ----------
 async function loadCloud(): Promise<AppData> {
   const sb = supabase!;
+  // 항상 고정된 순서로 가져온다 (정렬이 없으면 수정 후 행 순서가 바뀌어 UI가 튄다)
   const [emp, lv, hol, tm, lt, st] = await Promise.all([
-    sb.from("employees").select("*"),
-    sb.from("leave_requests").select("*"),
-    sb.from("holidays").select("*"),
-    sb.from("teams").select("*"),
-    sb.from("leave_types").select("*"),
+    sb.from("employees").select("*").order("created_at", { ascending: true }),
+    sb.from("leave_requests").select("*").order("start_date", { ascending: true }),
+    sb.from("holidays").select("*").order("date", { ascending: true }),
+    sb.from("teams").select("*").order("team_name", { ascending: true }),
+    sb.from("leave_types").select("*").order("leave_type_name", { ascending: true }),
     sb.from("app_settings").select("*").limit(1),
   ]);
 
@@ -134,6 +136,8 @@ const Ctx = createContext<StoreCtx | null>(null);
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(() => buildSeed());
   const [ready, setReady] = useState(false);
+  // 마지막 로컬 편집 시각 — 타이핑 중 실시간 재로드가 입력을 덮어쓰지 않게 함
+  const localWriteAt = useRef(0);
 
   useEffect(() => {
     let alive = true;
@@ -159,15 +163,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             "postgres_changes",
             { event: "*", schema: "public" },
             () => {
-              // 짧게 디바운스 후 최신 데이터 재로드 (변경 폭주 방지)
+              // 내가 방금 편집(타이핑) 중이면 재로드를 미룬다 → 입력 글자가 덮여쓰이지 않음.
+              // 편집이 멈춘 뒤에야 최신 데이터로 동기화한다.
               clearTimeout(debounce);
+              const since = Date.now() - localWriteAt.current;
+              const wait = since < 1500 ? 1800 - since : 300;
               debounce = setTimeout(() => {
                 loadCloud()
                   .then((d) => {
                     if (alive) setData(d);
                   })
                   .catch(() => {});
-              }, 250);
+              }, wait);
             }
           )
           .subscribe();
@@ -183,6 +190,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // 로컬 모드: 상태 변경 시 localStorage 동기화
   const commit = useCallback((next: AppData) => {
+    localWriteAt.current = Date.now();
     setData(next);
     if (!supabaseEnabled && typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
