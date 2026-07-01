@@ -22,7 +22,7 @@ import {
   EmploymentStatus,
   POSITIONS,
   Position,
-  TEAM_NAMES,
+  Team,
   TeamName,
 } from "@/lib/types";
 import { todayISO } from "@/lib/date";
@@ -82,9 +82,9 @@ export default function EmployeesPage() {
         </div>
         <Select value={team} onChange={(e) => setTeam(e.target.value as any)} className="w-auto">
           <option value="ALL">{t("common.allTeams")}</option>
-          {TEAM_NAMES.map((tm) => (
-            <option key={tm} value={tm}>
-              {tm}
+          {data.teams.map((tm) => (
+            <option key={tm.id} value={tm.team_name}>
+              {tm.team_name}
             </option>
           ))}
         </Select>
@@ -207,6 +207,7 @@ export default function EmployeesPage() {
       {(creating || editing) && (
         <EmployeeFormModal
           initial={editing ?? undefined}
+          teams={data.teams}
           defaultLeave={data.settings.default_annual_leave}
           onClose={() => {
             setCreating(false);
@@ -226,11 +227,13 @@ export default function EmployeesPage() {
 
 function EmployeeFormModal({
   initial,
+  teams,
   defaultLeave,
   onClose,
   onSubmit,
 }: {
   initial?: Employee;
+  teams: Team[];
   defaultLeave: number;
   onClose: () => void;
   onSubmit: (payload: Omit<Employee, "id" | "created_at" | "updated_at">) => void;
@@ -239,7 +242,7 @@ function EmployeeFormModal({
   const [f, setF] = useState({
     name: initial?.name ?? "",
     english_name: initial?.english_name ?? "",
-    team: initial?.team ?? ("OP" as TeamName),
+    team: initial?.team ?? teams[0]?.team_name ?? "",
     position: initial?.position ?? ("Staff" as Position),
     join_date: initial?.join_date ?? todayISO(),
     annual_leave_entitlement: initial?.annual_leave_entitlement ?? defaultLeave,
@@ -279,9 +282,9 @@ function EmployeeFormModal({
           </Field>
           <Field label={t("employees.field.team")}>
             <Select value={f.team} onChange={(e) => set("team", e.target.value as TeamName)}>
-              {TEAM_NAMES.map((tm) => (
-                <option key={tm} value={tm}>
-                  {tm}
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.team_name}>
+                  {tm.team_name}
                 </option>
               ))}
             </Select>

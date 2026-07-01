@@ -14,7 +14,7 @@ import {
   EmptyState,
 } from "@/components/ui";
 import { TeamChip } from "@/components/chips";
-import { TEAM_NAMES, TeamName } from "@/lib/types";
+import { TeamName } from "@/lib/types";
 import { todayISO } from "@/lib/date";
 
 export default function SettingsPage() {
@@ -22,12 +22,36 @@ export default function SettingsPage() {
     data,
     isCloud,
     updateSettings,
+    addTeam,
     updateTeam,
+    deleteTeam,
     addHoliday,
     deleteHoliday,
     resetAll,
   } = useStore();
   const { t } = useI18n();
+  const [newTeam, setNewTeam] = useState("");
+
+  function handleAddTeam(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newTeam.trim();
+    if (!name) return;
+    if (data.teams.some((tm) => tm.team_name === name)) {
+      alert(t("settings.dupTeam"));
+      return;
+    }
+    addTeam({ team_name: name, manager_name: "", warning_threshold: 2, notes: "" });
+    setNewTeam("");
+  }
+
+  function handleDeleteTeam(id: string, name: string) {
+    const memberCount = data.employees.filter((emp) => emp.team === name).length;
+    if (memberCount > 0) {
+      alert(t("settings.teamHasMembers"));
+      return;
+    }
+    if (confirm(`${name} — ${t("settings.confirmDeleteTeam")}`)) deleteTeam(id);
+  }
 
   return (
     <div>
@@ -114,7 +138,7 @@ export default function SettingsPage() {
                   value={tm.manager_name}
                   onChange={(e) => updateTeam(tm.id, { manager_name: e.target.value })}
                   placeholder={t("common.manager")}
-                  className="w-32"
+                  className="w-28"
                 />
                 <div className="ml-auto flex items-center gap-1">
                   <Input
@@ -124,13 +148,33 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       updateTeam(tm.id, { warning_threshold: Number(e.target.value) })
                     }
-                    className="w-16 text-right"
+                    className="w-14 text-right"
                   />
                   <span className="text-xs text-slate-400">{t("settings.orMore")}</span>
+                  <button
+                    onClick={() => handleDeleteTeam(tm.id, tm.team_name)}
+                    className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                    title={t("common.delete")}
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* 팀 추가 */}
+          <form onSubmit={handleAddTeam} className="mt-3 flex gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+            <Input
+              value={newTeam}
+              onChange={(e) => setNewTeam(e.target.value)}
+              placeholder={t("settings.teamNamePh")}
+              className="flex-1"
+            />
+            <Button type="submit">
+              <Plus size={16} /> {t("settings.teamAdd")}
+            </Button>
+          </form>
         </Card>
 
         {/* 휴가 유형 */}
@@ -189,6 +233,7 @@ export default function SettingsPage() {
 
       <HolidaySection
         holidays={data.holidays}
+        teamNames={data.teams.map((tm) => tm.team_name)}
         addHoliday={addHoliday}
         deleteHoliday={deleteHoliday}
       />
@@ -198,10 +243,12 @@ export default function SettingsPage() {
 
 function HolidaySection({
   holidays,
+  teamNames,
   addHoliday,
   deleteHoliday,
 }: {
   holidays: any[];
+  teamNames: string[];
   addHoliday: (h: any) => void;
   deleteHoliday: (id: string) => void;
 }) {
@@ -255,7 +302,7 @@ function HolidaySection({
           }
         >
           <option value="ALL">{t("common.allTeams")}</option>
-          {TEAM_NAMES.map((tm) => (
+          {teamNames.map((tm) => (
             <option key={tm} value={tm}>
               {tm}
             </option>

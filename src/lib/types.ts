@@ -3,7 +3,8 @@
 // 추후 Supabase(PostgreSQL)로 그대로 옮길 수 있도록 snake_case 컬럼명 유지
 // =============================================================
 
-export type TeamName = "OP" | "CT" | "Sales" | "GSM" | "Air" | "Management";
+// 팀은 이제 동적(추가/삭제 가능)이므로 문자열. 기본 6팀은 아래 상수로 시드에만 사용.
+export type TeamName = string;
 
 export type Position = "Staff" | "Senior" | "Manager" | "Director";
 
@@ -128,8 +129,8 @@ export const LEAVE_TYPE_KEYS: LeaveTypeKey[] = [
   "Other",
 ];
 
-// 팀별 식별 색상 (UI 팀 구분용)
-export const TEAM_COLORS: Record<TeamName, string> = {
+// 기본 6팀의 고정 색상 (알려진 팀은 색이 유지되도록)
+export const TEAM_COLORS: Record<string, string> = {
   OP: "#2563eb",
   CT: "#0891b2",
   Sales: "#059669",
@@ -137,3 +138,17 @@ export const TEAM_COLORS: Record<TeamName, string> = {
   Air: "#7c3aed",
   Management: "#475569",
 };
+
+// 새로 만든 팀에 자동 배정할 색상 팔레트
+export const TEAM_COLOR_PALETTE = [
+  "#2563eb", "#0891b2", "#059669", "#d97706", "#7c3aed", "#475569",
+  "#db2777", "#0d9488", "#ca8a04", "#4f46e5", "#dc2626", "#65a30d",
+];
+
+// 팀 이름 → 색상 (알려진 팀은 고정색, 그 외는 이름 해시로 팔레트에서 결정론적 배정)
+export function teamColor(name: string): string {
+  if (TEAM_COLORS[name]) return TEAM_COLORS[name];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return TEAM_COLOR_PALETTE[h % TEAM_COLOR_PALETTE.length];
+}

@@ -6,14 +6,18 @@ import { useI18n } from "@/lib/i18n";
 import { Card, PageHeader, StatCard, EmptyState } from "@/components/ui";
 import { StatusChip, LeaveTypeChip } from "@/components/chips";
 import { summarizeEmployee } from "@/lib/leave-calc";
-import { TEAM_NAMES, TeamName, TEAM_COLORS } from "@/lib/types";
+import { TeamName, teamColor } from "@/lib/types";
 import { fmtDate, todayISO } from "@/lib/date";
 
 export default function TeamsPage() {
   const { data } = useStore();
   const { t, lang } = useI18n();
-  const [team, setTeam] = useState<TeamName>("OP");
+  const [selected, setSelected] = useState<TeamName>("");
   const tISO = todayISO();
+
+  const teamNames = data.teams.map((tm) => tm.team_name);
+  // 선택된 팀이 없거나 삭제됐으면 첫 팀으로 대체
+  const team = teamNames.includes(selected) ? selected : teamNames[0] ?? "";
 
   const empById = useMemo(
     () => Object.fromEntries(data.employees.map((e) => [e.id, e])),
@@ -54,24 +58,28 @@ export default function TeamsPage() {
       <PageHeader title={t("teams.title")} subtitle={t("teams.subtitle")} />
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {TEAM_NAMES.map((tm) => (
+        {data.teams.map((tm) => (
           <button
-            key={tm}
-            onClick={() => setTeam(tm)}
+            key={tm.id}
+            onClick={() => setSelected(tm.team_name)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              team === tm
+              team === tm.team_name
                 ? "text-white"
                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             }`}
-            style={team === tm ? { backgroundColor: TEAM_COLORS[tm] } : undefined}
+            style={
+              team === tm.team_name
+                ? { backgroundColor: teamColor(tm.team_name) }
+                : undefined
+            }
           >
-            {tm}
+            {tm.team_name}
           </button>
         ))}
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label={t("teams.activeCount")} value={`${active.length}`} accent={TEAM_COLORS[team]} />
+        <StatCard label={t("teams.activeCount")} value={`${active.length}`} accent={teamColor(team)} />
         <StatCard label={t("teams.manager")} value={teamMeta?.manager_name ?? "—"} />
         <StatCard label={t("teams.warnThreshold")} value={`${teamMeta?.warning_threshold ?? "-"}`} />
         <StatCard label={t("teams.remainingSum")} value={`${summary.remaining}${t("common.days")}`} accent="#059669" />

@@ -4,7 +4,7 @@ import {
   LeaveStatus,
   LeaveTypeKey,
   TeamName,
-  TEAM_COLORS,
+  teamColor,
 } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
 
@@ -42,7 +42,7 @@ export function StatusChip({ status }: { status: LeaveStatus }) {
 }
 
 export function TeamChip({ team }: { team: TeamName }) {
-  const color = TEAM_COLORS[team];
+  const color = teamColor(team);
   return (
     <span
       className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold"

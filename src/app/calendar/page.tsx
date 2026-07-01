@@ -7,12 +7,7 @@ import { useI18n, KO_WEEKDAYS, EN_WEEKDAYS } from "@/lib/i18n";
 import { Card, PageHeader, Select, Button } from "@/components/ui";
 import { LEAVE_TYPE_COLORS } from "@/components/chips";
 import { monthGrid, monthLabelL, toISO, today, isWeekend } from "@/lib/date";
-import {
-  LEAVE_TYPE_KEYS,
-  TEAM_NAMES,
-  TeamName,
-  LeaveTypeKey,
-} from "@/lib/types";
+import { LEAVE_TYPE_KEYS, TeamName, LeaveTypeKey } from "@/lib/types";
 import { leavesOnDate } from "@/lib/leave-calc";
 
 export default function CalendarPage() {
@@ -94,9 +89,9 @@ export default function CalendarPage() {
             className="w-auto"
           >
             <option value="ALL">{t("common.allTeams")}</option>
-            {TEAM_NAMES.map((tm) => (
-              <option key={tm} value={tm}>
-                {tm}
+            {data.teams.map((tm) => (
+              <option key={tm.id} value={tm.team_name}>
+                {tm.team_name}
               </option>
             ))}
           </Select>

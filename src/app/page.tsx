@@ -25,7 +25,7 @@ import {
   fmtDate,
 } from "@/lib/date";
 import { leavesOnDate, summarizeEmployee } from "@/lib/leave-calc";
-import { TEAM_NAMES, TeamName, TEAM_COLORS } from "@/lib/types";
+import { TeamName, teamColor } from "@/lib/types";
 
 export default function DashboardPage() {
   const { data, ready } = useStore();
@@ -39,6 +39,11 @@ export default function DashboardPage() {
   const empById = useMemo(
     () => Object.fromEntries(data.employees.map((e) => [e.id, e])),
     [data.employees]
+  );
+
+  const teamNames = useMemo(
+    () => data.teams.map((tm) => tm.team_name),
+    [data.teams]
   );
 
   const activeLeaves = useMemo(
@@ -72,12 +77,12 @@ export default function DashboardPage() {
 
   const teamTodayCount = useMemo(() => {
     const counts: Record<string, number> = {};
-    TEAM_NAMES.forEach((tm) => (counts[tm] = 0));
+    teamNames.forEach((tm) => (counts[tm] = 0));
     todayLeaves.forEach((l) => {
       counts[l.team] = (counts[l.team] ?? 0) + 1;
     });
     return counts;
-  }, [todayLeaves]);
+  }, [todayLeaves, teamNames]);
 
   const summaries = useMemo(
     () =>
@@ -101,7 +106,7 @@ export default function DashboardPage() {
     const out: { date: string; team: TeamName; count: number; threshold: number }[] =
       [];
     const teamThreshold: Record<string, number> = {};
-    TEAM_NAMES.forEach((tm) => {
+    teamNames.forEach((tm) => {
       teamThreshold[tm] =
         data.teams.find((x) => x.team_name === tm)?.warning_threshold ?? 99;
     });
@@ -110,7 +115,7 @@ export default function DashboardPage() {
       d.setDate(d.getDate() + i);
       const dISO = toISO(d);
       const onLeave = leavesOnDate(dISO, data, { includePending: true });
-      TEAM_NAMES.forEach((tm) => {
+      teamNames.forEach((tm) => {
         const c = onLeave.filter((l) => l.team === tm).length;
         if (c >= teamThreshold[tm] && c > 0) {
           out.push({ date: dISO, team: tm, count: c, threshold: teamThreshold[tm] });
@@ -215,7 +220,7 @@ export default function DashboardPage() {
             {t("dash.teamTodayCount")}
           </h2>
           <div className="space-y-2.5">
-            {TEAM_NAMES.map((tm) => {
+            {teamNames.map((tm) => {
               const total = data.employees.filter(
                 (e) => e.team === tm && e.employment_status === "재직"
               ).length;
@@ -232,7 +237,7 @@ export default function DashboardPage() {
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full rounded-full"
-                      style={{ width: `${pct}%`, backgroundColor: TEAM_COLORS[tm] }}
+                      style={{ width: `${pct}%`, backgroundColor: teamColor(tm) }}
                     />
                   </div>
                 </div>

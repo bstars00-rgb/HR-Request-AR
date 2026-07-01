@@ -18,7 +18,6 @@ import {
   LeaveRequest,
   LeaveStatus,
   LEAVE_STATUSES,
-  TEAM_NAMES,
   TeamName,
 } from "@/lib/types";
 import { fmtDate } from "@/lib/date";
@@ -61,9 +60,9 @@ export default function LeavesPage() {
       <Card className="mb-4 flex flex-wrap items-center gap-2 p-3">
         <Select value={team} onChange={(e) => setTeam(e.target.value as any)} className="w-auto">
           <option value="ALL">{t("common.allTeams")}</option>
-          {TEAM_NAMES.map((tm) => (
-            <option key={tm} value={tm}>
-              {tm}
+          {data.teams.map((tm) => (
+            <option key={tm.id} value={tm.team_name}>
+              {tm.team_name}
             </option>
           ))}
         </Select>

@@ -122,7 +122,9 @@ interface StoreCtx {
   addHoliday: (h: Omit<Holiday, "id">) => void;
   updateHoliday: (id: string, patch: Partial<Holiday>) => void;
   deleteHoliday: (id: string) => void;
+  addTeam: (t: Omit<Team, "id">) => void;
   updateTeam: (id: string, patch: Partial<Team>) => void;
+  deleteTeam: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   resetAll: () => void;
 }
@@ -353,6 +355,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       },
 
       // ---------------- Teams ----------------
+      addTeam: (tm) => {
+        const team: Team = { ...tm, id: newId("team") };
+        commit({ ...data, teams: [...data.teams, team] });
+        if (supabaseEnabled && sb) {
+          sb.from("teams").insert(team).then(({ error }) => {
+            if (error) cloudFail("팀 추가", error);
+          });
+        }
+      },
       updateTeam: (id, patch) => {
         commit({
           ...data,
@@ -361,6 +372,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (supabaseEnabled && sb) {
           sb.from("teams").update(patch).eq("id", id).then(({ error }) => {
             if (error) cloudFail("팀 설정 수정", error);
+          });
+        }
+      },
+      deleteTeam: (id) => {
+        commit({ ...data, teams: data.teams.filter((t) => t.id !== id) });
+        if (supabaseEnabled && sb) {
+          sb.from("teams").delete().eq("id", id).then(({ error }) => {
+            if (error) cloudFail("팀 삭제", error);
           });
         }
       },
