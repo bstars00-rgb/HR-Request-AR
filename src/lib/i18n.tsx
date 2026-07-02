@@ -121,6 +121,8 @@ const ko: Dict = {
   "employees.field.status": "근무 상태",
   "employees.field.entitlement": "기본 연차 일수",
   "employees.field.carryover": "이월 연차",
+  "employees.field.priorUsed": "이미 사용한 연차 (도입 전)",
+  "employees.field.priorUsedHint": "시스템 도입 전(예: 1~6월)에 이미 쓴 연차 일수. 잔여에서 자동 차감됩니다. 앱에 등록한 휴가와 별개입니다.",
   "employees.field.notes": "비고",
   "employees.confirmDelete": "직원을 삭제할까요? (관련 휴가 기록도 삭제됩니다)",
 
@@ -305,6 +307,8 @@ const en: Dict = {
   "employees.field.status": "Employment Status",
   "employees.field.entitlement": "Annual Leave (days)",
   "employees.field.carryover": "Carried Over",
+  "employees.field.priorUsed": "Already Used (before system)",
+  "employees.field.priorUsedHint": "Days of leave already taken before adopting this system (e.g. Jan–Jun). Deducted from remaining automatically. Separate from leaves entered in the app.",
   "employees.field.notes": "Notes",
   "employees.confirmDelete": "Delete this employee? (Their leave records will also be removed)",
 

@@ -53,7 +53,8 @@ export function summarizeEmployee(emp: Employee, data: AppData): LeaveSummary {
   const carriedOver = emp.carried_over_leave;
   const total = entitlement + carriedOver;
 
-  let used = 0;
+  // 시스템 도입 전 이미 사용한 연차(과거 기록을 일일이 안 넣어도 되도록)
+  let used = Number(emp.used_adjustment) || 0;
   for (const lv of data.leaves) {
     if (lv.employee_id !== emp.id) continue;
     if (lv.status !== "Approved") continue;

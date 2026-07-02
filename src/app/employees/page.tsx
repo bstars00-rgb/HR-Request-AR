@@ -247,6 +247,7 @@ function EmployeeFormModal({
     join_date: initial?.join_date ?? todayISO(),
     annual_leave_entitlement: initial?.annual_leave_entitlement ?? defaultLeave,
     carried_over_leave: initial?.carried_over_leave ?? 0,
+    used_adjustment: initial?.used_adjustment ?? 0,
     employment_status: initial?.employment_status ?? ("재직" as EmploymentStatus),
     role: initial?.role ?? ("staff" as Employee["role"]),
     notes: initial?.notes ?? "",
@@ -338,7 +339,17 @@ function EmployeeFormModal({
               onChange={(e) => set("carried_over_leave", Number(e.target.value))}
             />
           </Field>
+          <Field label={t("employees.field.priorUsed")}>
+            <Input
+              type="number"
+              step="0.5"
+              min={0}
+              value={f.used_adjustment}
+              onChange={(e) => set("used_adjustment", Number(e.target.value))}
+            />
+          </Field>
         </div>
+        <p className="-mt-1 text-xs text-slate-400">{t("employees.field.priorUsedHint")}</p>
         <Field label={t("employees.field.notes")}>
           <Input value={f.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>

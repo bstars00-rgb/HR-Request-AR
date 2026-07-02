@@ -93,6 +93,7 @@ TEAM_NAMES.forEach((team) => {
       join_date: `202${i + 1}-0${(i % 9) + 1}-15`,
       annual_leave_entitlement: 15,
       carried_over_leave: i === 0 ? 3 : i === 1 ? 1 : 0,
+      used_adjustment: 0,
       employment_status: "재직",
       role: i === 0 ? "manager" : "staff",
       notes: "",

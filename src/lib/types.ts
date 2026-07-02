@@ -36,6 +36,7 @@ export interface Employee {
   join_date: string; // YYYY-MM-DD
   annual_leave_entitlement: number; // 기본 연차 일수
   carried_over_leave: number; // 이월 연차
+  used_adjustment: number; // 시스템 도입 전 이미 사용한 연차(일) — 잔여에서 차감
   employment_status: EmploymentStatus;
   role: Role; // 확장용 (1차에서는 UI 노출 최소)
   notes: string;

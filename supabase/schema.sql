@@ -36,6 +36,7 @@ create table if not exists employees (
   join_date date,
   annual_leave_entitlement numeric not null default 15,
   carried_over_leave numeric not null default 0,
+  used_adjustment numeric not null default 0,        -- 시스템 도입 전 이미 사용한 연차
   employment_status text not null default '재직',
   role text not null default 'staff',          -- 확장: admin / manager / staff
   notes text default '',
