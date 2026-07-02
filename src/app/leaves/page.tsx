@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
+import { downloadCSV } from "@/lib/csv";
 import {
   Card,
   PageHeader,
@@ -12,7 +13,7 @@ import {
   Select,
   EmptyState,
 } from "@/components/ui";
-import { TeamChip, LeaveTypeChip } from "@/components/chips";
+import { TeamChip, LeaveTypeChip, StatusChip } from "@/components/chips";
 import LeaveForm from "@/components/LeaveForm";
 import {
   LeaveRequest,
@@ -24,7 +25,7 @@ import { fmtDate } from "@/lib/date";
 import { summarizeEmployee } from "@/lib/leave-calc";
 
 export default function LeavesPage() {
-  const { data, updateLeave, deleteLeave } = useStore();
+  const { data, updateLeave, deleteLeave, isAdmin } = useStore();
   const { t, lang } = useI18n();
   const [team, setTeam] = useState<TeamName | "ALL">("ALL");
   const [status, setStatus] = useState<LeaveStatus | "ALL">("ALL");
@@ -52,6 +53,43 @@ export default function LeavesPage() {
     return e ? summarizeEmployee(e, data) : null;
   }, [emp, empById, data]);
 
+  // 선택 직원의 유형별 승인 사용 일수
+  const typeBreakdown = useMemo(() => {
+    if (emp === "ALL") return [];
+    const map: Record<string, number> = {};
+    data.leaves.forEach((l) => {
+      if (l.employee_id !== emp || l.status !== "Approved") return;
+      map[l.leave_type] = (map[l.leave_type] ?? 0) + l.days_count;
+    });
+    return Object.entries(map).filter(([, v]) => v > 0);
+  }, [emp, data.leaves]);
+
+  function exportCSV() {
+    const headers = [
+      "직원/Employee",
+      "팀/Team",
+      "유형/Type",
+      "시작일/Start",
+      "종료일/End",
+      "일수/Days",
+      "반차/HalfDay",
+      "상태/Status",
+      "사유/Reason",
+    ];
+    const rowsCsv = rows.map((l) => [
+      empById[l.employee_id]?.name ?? "",
+      l.team,
+      l.leave_type,
+      l.start_date,
+      l.end_date,
+      l.days_count,
+      l.half_day_type,
+      l.status,
+      l.reason,
+    ]);
+    downloadCSV(`leaves_${new Date().toISOString().slice(0, 10)}.csv`, headers, rowsCsv);
+  }
+
   const th = "px-4 py-3 font-medium";
   const td = "px-4 py-3";
 
@@ -61,9 +99,16 @@ export default function LeavesPage() {
         title={t("leaves.title")}
         subtitle={t("leaves.subtitle")}
         action={
-          <Button onClick={() => setCreating(true)}>
-            <Plus size={16} /> {t("dash.addLeave")}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportCSV}>
+              <Download size={16} /> {t("common.export")}
+            </Button>
+            {isAdmin && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus size={16} /> {t("dash.addLeave")}
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -93,13 +138,25 @@ export default function LeavesPage() {
           ))}
         </Select>
         {selectedSummary && (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             {t("employees.col.used")} {selectedSummary.used}
             {t("common.days")} · {t("employees.col.remaining")}{" "}
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
               {selectedSummary.remaining}
               {t("common.days")}
             </span>
+            {typeBreakdown.length > 0 && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600">|</span>
+                {typeBreakdown.map(([type, days]) => (
+                  <span key={type} className="inline-flex items-center gap-1">
+                    <LeaveTypeChip type={type as any} />
+                    {days}
+                    {t("common.days")}
+                  </span>
+                ))}
+              </>
+            )}
           </span>
         )}
         <span className="ml-auto text-xs text-slate-400">{rows.length}</span>
@@ -160,38 +217,48 @@ export default function LeavesPage() {
                       {l.reason || "—"}
                     </td>
                     <td className={td}>
-                      <Select
-                        value={l.status}
-                        onChange={(e) =>
-                          updateLeave(l.id, { status: e.target.value as LeaveStatus })
-                        }
-                        className="w-auto !px-2 !py-1 text-xs"
-                      >
-                        {LEAVE_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {t(`status.${s}`)}
-                          </option>
-                        ))}
-                      </Select>
+                      {isAdmin ? (
+                        <Select
+                          value={l.status}
+                          onChange={(e) =>
+                            updateLeave(l.id, { status: e.target.value as LeaveStatus })
+                          }
+                          className="w-auto !px-2 !py-1 text-xs"
+                        >
+                          {LEAVE_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {t(`status.${s}`)}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <StatusChip status={l.status} />
+                      )}
                     </td>
                     <td className={td}>
                       <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => setEditing(l)}
-                          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800"
-                          title={t("common.edit")}
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(t("leaves.confirmDelete"))) deleteLeave(l.id);
-                          }}
-                          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                          title={t("common.delete")}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {isAdmin ? (
+                          <>
+                            <button
+                              onClick={() => setEditing(l)}
+                              className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800"
+                              title={t("common.edit")}
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(t("leaves.confirmDelete"))) deleteLeave(l.id);
+                              }}
+                              className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                              title={t("common.delete")}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
+                        )}
                       </div>
                     </td>
                   </tr>

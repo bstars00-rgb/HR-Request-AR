@@ -164,6 +164,7 @@ export function buildSeed(): AppData {
       exclude_weekends: true,
       exclude_holidays: true,
       default_annual_leave: 15,
+      admin_pin: "",
     },
   };
 }

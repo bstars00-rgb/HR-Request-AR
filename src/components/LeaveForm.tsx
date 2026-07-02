@@ -11,7 +11,7 @@ import {
   LEAVE_STATUSES,
   LEAVE_TYPE_KEYS,
 } from "@/lib/types";
-import { computeLeaveDays } from "@/lib/leave-calc";
+import { computeLeaveDays, summarizeEmployee } from "@/lib/leave-calc";
 import { todayISO } from "@/lib/date";
 import { Button, Field, Input, Select, Textarea } from "./ui";
 
@@ -55,6 +55,19 @@ export default function LeaveForm({ initial, onDone }: Props) {
       data
     );
   }, [startDate, endDate, halfDay, leaveType, isHalf, data]);
+
+  // 잔여 초과 경고 (승인 + 차감 대상 유형일 때만)
+  const overLimit = useMemo(() => {
+    if (status !== "Approved") return false;
+    const lt = data.leaveTypes.find((x) => x.leave_type_name === leaveType);
+    if (lt && !lt.deduct_from_annual_leave) return false; // 차감 안 하는 유형
+    const emp = data.employees.find((x) => x.id === employeeId);
+    if (!emp) return false;
+    let available = summarizeEmployee(emp, data).remaining;
+    // 수정 중이고 기존 건이 이미 차감돼 있었다면 되돌려서 계산
+    if (initial && initial.status === "Approved") available += initial.days_count;
+    return previewDays > available;
+  }, [status, leaveType, employeeId, previewDays, data, initial]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -175,6 +188,11 @@ export default function LeaveForm({ initial, onDone }: Props) {
           {t("common.days")}
         </span>
       </div>
+      {overLimit && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          ⚠️ {t("form.overLimit")}
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onDone}>

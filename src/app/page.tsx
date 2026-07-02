@@ -28,7 +28,7 @@ import { leavesOnDate, summarizeEmployee } from "@/lib/leave-calc";
 import { TeamName, teamColor } from "@/lib/types";
 
 export default function DashboardPage() {
-  const { data, ready } = useStore();
+  const { data, ready, isAdmin } = useStore();
   const { t, lang } = useI18n();
   const [openForm, setOpenForm] = useState(false);
 
@@ -134,9 +134,11 @@ export default function DashboardPage() {
         title={t("dash.title")}
         subtitle={`${fmtDate(tISO, lang)} · ${t("dash.subtitle")}`}
         action={
-          <Button onClick={() => setOpenForm(true)}>
-            <Plus size={16} /> {t("dash.addLeave")}
-          </Button>
+          isAdmin ? (
+            <Button onClick={() => setOpenForm(true)}>
+              <Plus size={16} /> {t("dash.addLeave")}
+            </Button>
+          ) : null
         }
       />
 

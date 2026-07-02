@@ -79,7 +79,8 @@ create table if not exists app_settings (
   id text primary key default 'singleton',
   exclude_weekends boolean not null default true,
   exclude_holidays boolean not null default true,
-  default_annual_leave numeric not null default 15
+  default_annual_leave numeric not null default 15,
+  admin_pin text default ''                      -- 편집 잠금 PIN (빈 값이면 잠금 없음)
 );
 
 -- =============================================================

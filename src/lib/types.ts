@@ -89,6 +89,7 @@ export interface Settings {
   exclude_weekends: boolean; // 주말 제외
   exclude_holidays: boolean; // 공휴일 제외
   default_annual_leave: number; // 신규 직원 기본 연차
+  admin_pin: string; // 편집 잠금용 PIN (빈 값이면 잠금 없음 = 누구나 편집)
 }
 
 export interface AppData {

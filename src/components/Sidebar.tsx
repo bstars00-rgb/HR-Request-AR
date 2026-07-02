@@ -15,9 +15,12 @@ import {
   Moon,
   Sun,
   Languages,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
+import { useStore } from "@/lib/store";
 
 const NAV = [
   { href: "/", key: "nav.dashboard", icon: LayoutDashboard },
@@ -31,24 +34,48 @@ const NAV = [
 function Controls() {
   const { lang, setLang, t } = useI18n();
   const { theme, toggle } = useTheme();
+  const { data, isAdmin, unlockAdmin, lockAdmin } = useStore();
+  const pinSet = !!data.settings.admin_pin;
+
+  function handleUnlock() {
+    const pin = window.prompt(t("admin.enterPin"));
+    if (pin === null) return;
+    if (!unlockAdmin(pin)) window.alert(t("admin.wrongPin"));
+  }
+
   return (
-    <div className="flex items-center gap-1.5 px-3 pb-2">
-      <button
-        onClick={toggle}
-        title={theme === "dark" ? t("ui.lightMode") : t("ui.darkMode")}
-        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-      >
-        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-        {theme === "dark" ? t("ui.lightMode") : t("ui.darkMode")}
-      </button>
-      <button
-        onClick={() => setLang(lang === "ko" ? "en" : "ko")}
-        title={t("ui.language")}
-        className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-      >
-        <Languages size={15} />
-        {lang === "ko" ? "EN" : "한"}
-      </button>
+    <div className="px-3 pb-2">
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={toggle}
+          title={theme === "dark" ? t("ui.lightMode") : t("ui.darkMode")}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+          {theme === "dark" ? t("ui.lightMode") : t("ui.darkMode")}
+        </button>
+        <button
+          onClick={() => setLang(lang === "ko" ? "en" : "ko")}
+          title={t("ui.language")}
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          <Languages size={15} />
+          {lang === "ko" ? "EN" : "한"}
+        </button>
+      </div>
+      {pinSet && (
+        <button
+          onClick={isAdmin ? lockAdmin : handleUnlock}
+          className={`mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs ${
+            isAdmin
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+              : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          }`}
+        >
+          {isAdmin ? <Unlock size={15} /> : <Lock size={15} />}
+          {isAdmin ? t("admin.lock") : t("admin.unlock")}
+        </button>
+      )}
     </div>
   );
 }
@@ -85,7 +112,7 @@ export default function Sidebar() {
   return (
     <>
       {/* 모바일 상단바 */}
-      <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 lg:hidden">
+      <div className="no-print fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 lg:hidden">
         <span className="font-semibold text-slate-800 dark:text-slate-100">
           {t("brand.title")}
         </span>

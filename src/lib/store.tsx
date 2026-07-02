@@ -26,7 +26,7 @@ import {
   Team,
 } from "./types";
 import { buildSeed } from "./seed";
-import { computeLeaveDays } from "./leave-calc";
+import { computeLeaveDays, summarizeEmployee } from "./leave-calc";
 import { supabase, supabaseEnabled } from "./supabaseClient";
 
 const STORAGE_KEY = "hr-leave-platform:v1";
@@ -60,7 +60,10 @@ const DEFAULT_SETTINGS: Settings = {
   exclude_weekends: true,
   exclude_holidays: true,
   default_annual_leave: 15,
+  admin_pin: "",
 };
+
+const ADMIN_KEY = "hr-leave-platform:admin";
 
 // ---------- localStorage 로더 ----------
 function loadLocal(): AppData {
@@ -97,6 +100,7 @@ async function loadCloud(): Promise<AppData> {
         exclude_weekends: settingsRow.exclude_weekends,
         exclude_holidays: settingsRow.exclude_holidays,
         default_annual_leave: Number(settingsRow.default_annual_leave),
+        admin_pin: settingsRow.admin_pin ?? "",
       }
     : DEFAULT_SETTINGS;
 
@@ -129,6 +133,12 @@ interface StoreCtx {
   deleteTeam: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   resetAll: () => void;
+  // 편집 잠금
+  isAdmin: boolean;
+  unlockAdmin: (pin: string) => boolean;
+  lockAdmin: () => void;
+  // 연말 이월 처리
+  rolloverYearEnd: (year: number) => void;
 }
 
 const Ctx = createContext<StoreCtx | null>(null);
@@ -136,8 +146,15 @@ const Ctx = createContext<StoreCtx | null>(null);
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(() => buildSeed());
   const [ready, setReady] = useState(false);
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
   // 마지막 로컬 편집 시각 — 타이핑 중 실시간 재로드가 입력을 덮어쓰지 않게 함
   const localWriteAt = useRef(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem(ADMIN_KEY) === "1") {
+      setAdminUnlocked(true);
+    }
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -394,6 +411,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       // ---------------- Settings ----------------
       updateSettings: (patch) => {
+        // PIN 을 설정하는 사람은 계속 편집 가능하도록 자동 잠금 해제 유지
+        if (patch.admin_pin !== undefined && patch.admin_pin) {
+          setAdminUnlocked(true);
+          if (typeof window !== "undefined") sessionStorage.setItem(ADMIN_KEY, "1");
+        }
         const next = recalcLeaves({
           ...data,
           settings: { ...data.settings, ...patch },
@@ -405,6 +427,66 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             .then(({ error }) => {
               if (error) cloudFail("설정 저장", error);
             });
+        }
+      },
+
+      // ---------------- 편집 잠금 ----------------
+      isAdmin: !data.settings.admin_pin || adminUnlocked,
+      unlockAdmin: (pin) => {
+        if (pin === data.settings.admin_pin) {
+          setAdminUnlocked(true);
+          if (typeof window !== "undefined") sessionStorage.setItem(ADMIN_KEY, "1");
+          return true;
+        }
+        return false;
+      },
+      lockAdmin: () => {
+        setAdminUnlocked(false);
+        if (typeof window !== "undefined") sessionStorage.removeItem(ADMIN_KEY);
+      },
+
+      // ---------------- 연말 이월 처리 ----------------
+      // 지정 연도의 잔여를 다음 해 이월로 옮기고, 그 해 휴가 기록/도입전사용을 초기화
+      rolloverYearEnd: (year) => {
+        const yearPrefix = `${year}-`;
+        const remainByEmp: Record<string, number> = {};
+        data.employees.forEach((e) => {
+          remainByEmp[e.id] = summarizeEmployee(e, data).remaining;
+        });
+        const nextEmployees = data.employees.map((e) => ({
+          ...e,
+          carried_over_leave: Math.max(0, remainByEmp[e.id] ?? 0),
+          used_adjustment: 0,
+          updated_at: nowISO(),
+        }));
+        const removedLeaveIds = data.leaves
+          .filter((l) => l.start_date.startsWith(yearPrefix))
+          .map((l) => l.id);
+        const nextLeaves = data.leaves.filter(
+          (l) => !l.start_date.startsWith(yearPrefix)
+        );
+        commit({ ...data, employees: nextEmployees, leaves: nextLeaves });
+        if (supabaseEnabled && sb) {
+          nextEmployees.forEach((e) => {
+            sb.from("employees")
+              .update({
+                carried_over_leave: e.carried_over_leave,
+                used_adjustment: e.used_adjustment,
+                updated_at: e.updated_at,
+              })
+              .eq("id", e.id)
+              .then(({ error }) => {
+                if (error) cloudFail("이월 처리", error);
+              });
+          });
+          if (removedLeaveIds.length) {
+            sb.from("leave_requests")
+              .delete()
+              .in("id", removedLeaveIds)
+              .then(({ error }) => {
+                if (error) cloudFail("이월 처리(휴가 정리)", error);
+              });
+          }
         }
       },
 
@@ -421,7 +503,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         commit(recalcLeaves(buildSeed()));
       },
     };
-  }, [data, ready, commit, cloudFail]);
+  }, [data, ready, adminUnlocked, commit, cloudFail]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }

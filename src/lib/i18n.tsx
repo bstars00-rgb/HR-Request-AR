@@ -210,6 +210,32 @@ const ko: Dict = {
   "ui.darkMode": "다크 모드",
   "ui.lightMode": "라이트 모드",
   "ui.language": "언어",
+
+  // 내보내기 / 인쇄
+  "common.export": "엑셀(CSV)",
+  "cal.print": "인쇄",
+
+  // 편집 잠금
+  "admin.viewOnly": "보기 전용",
+  "admin.unlock": "잠금 해제",
+  "admin.lock": "편집 잠금",
+  "admin.enterPin": "관리자 PIN을 입력하세요",
+  "admin.wrongPin": "PIN이 올바르지 않습니다.",
+  "settings.adminPin": "편집 잠금 PIN",
+  "settings.adminPinHint": "PIN을 설정하면 이후 편집 시 PIN이 필요합니다(현재 창은 유지). 비워두면 누구나 편집 가능합니다.",
+
+  // 잔여 초과 경고
+  "form.overLimit": "잔여 연차를 초과합니다",
+
+  // 유형별 사용
+  "leaves.byType": "유형별 사용",
+
+  // 연말 이월
+  "settings.yearEnd": "연말 이월 처리",
+  "settings.yearEndYear": "정리할 연도",
+  "settings.yearEndRun": "이월 처리 실행",
+  "settings.yearEndHint": "지정 연도의 잔여 연차를 다음 해 이월로 옮기고, 그 해 휴가 기록과 '이미 사용한 연차'를 0으로 초기화합니다. 되돌릴 수 없으니 먼저 내보내기로 백업하세요.",
+  "settings.yearEndConfirm": "정말 진행할까요? 되돌릴 수 없습니다. 먼저 내보내기(백업)를 했는지 확인하세요.",
 };
 
 const en: Dict = {
@@ -390,6 +416,27 @@ const en: Dict = {
   "ui.darkMode": "Dark mode",
   "ui.lightMode": "Light mode",
   "ui.language": "Language",
+
+  "common.export": "Export (CSV)",
+  "cal.print": "Print",
+
+  "admin.viewOnly": "View only",
+  "admin.unlock": "Unlock",
+  "admin.lock": "Lock editing",
+  "admin.enterPin": "Enter admin PIN",
+  "admin.wrongPin": "Incorrect PIN.",
+  "settings.adminPin": "Edit-lock PIN",
+  "settings.adminPinHint": "Set a PIN to require it before editing (this window stays unlocked). Leave empty to let anyone edit.",
+
+  "form.overLimit": "Exceeds remaining leave",
+
+  "leaves.byType": "By type",
+
+  "settings.yearEnd": "Year-end Rollover",
+  "settings.yearEndYear": "Year to close",
+  "settings.yearEndRun": "Run rollover",
+  "settings.yearEndHint": "Moves each employee's remaining leave into next year's carry-over, and resets that year's leave records and 'already used' to 0. This cannot be undone — export a backup first.",
+  "settings.yearEndConfirm": "Proceed? This cannot be undone. Make sure you exported a backup first.",
 };
 
 const DICTS: Record<Lang, Dict> = { ko, en };

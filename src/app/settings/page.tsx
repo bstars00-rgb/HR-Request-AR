@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const {
     data,
     isCloud,
+    isAdmin,
     updateSettings,
     addTeam,
     updateTeam,
@@ -28,9 +29,15 @@ export default function SettingsPage() {
     addHoliday,
     deleteHoliday,
     resetAll,
+    rolloverYearEnd,
   } = useStore();
   const { t } = useI18n();
   const [newTeam, setNewTeam] = useState("");
+  const [closeYear, setCloseYear] = useState(2026);
+
+  function handleRollover() {
+    if (confirm(t("settings.yearEndConfirm"))) rolloverYearEnd(closeYear);
+  }
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +87,13 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      {!isAdmin && (
+        <Card className="mb-4 flex items-center gap-2 border-amber-200 bg-amber-50/60 p-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          🔒 {t("admin.viewOnly")} — {t("admin.unlock")}
+        </Card>
+      )}
+
+      <fieldset disabled={!isAdmin} className="m-0 border-0 p-0">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* 연차 계산 기준 */}
         <Card className="p-4">
@@ -229,6 +243,43 @@ export default function SettingsPage() {
             </Button>
           )}
         </Card>
+
+        {/* 편집 잠금 PIN */}
+        <Card className="p-4">
+          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {t("settings.adminPin")}
+          </h2>
+          <Input
+            value={data.settings.admin_pin}
+            onChange={(e) => updateSettings({ admin_pin: e.target.value })}
+            placeholder="예: 1234"
+          />
+          <p className="mt-2 text-xs text-slate-400">{t("settings.adminPinHint")}</p>
+        </Card>
+
+        {/* 연말 이월 처리 */}
+        <Card className="p-4">
+          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {t("settings.yearEnd")}
+          </h2>
+          <div className="flex items-end gap-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
+                {t("settings.yearEndYear")}
+              </span>
+              <Input
+                type="number"
+                value={closeYear}
+                onChange={(e) => setCloseYear(Number(e.target.value))}
+                className="w-28"
+              />
+            </label>
+            <Button variant="danger" onClick={handleRollover}>
+              {t("settings.yearEndRun")}
+            </Button>
+          </div>
+          <p className="mt-2 text-xs text-slate-400">{t("settings.yearEndHint")}</p>
+        </Card>
       </div>
 
       <HolidaySection
@@ -237,6 +288,7 @@ export default function SettingsPage() {
         addHoliday={addHoliday}
         deleteHoliday={deleteHoliday}
       />
+      </fieldset>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Download } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
+import { downloadCSV } from "@/lib/csv";
 import {
   Card,
   PageHeader,
@@ -28,8 +29,41 @@ import {
 import { todayISO } from "@/lib/date";
 
 export default function EmployeesPage() {
-  const { data, addEmployee, updateEmployee, deleteEmployee } = useStore();
+  const { data, addEmployee, updateEmployee, deleteEmployee, isAdmin } = useStore();
   const { t } = useI18n();
+
+  function exportCSV() {
+    const headers = [
+      "이름/Name",
+      "영문명/English",
+      "팀/Team",
+      "직급/Position",
+      "입사일/JoinDate",
+      "기본연차/Entitlement",
+      "이월/CarryOver",
+      "도입전사용/PriorUsed",
+      "사용/Used",
+      "잔여/Remaining",
+      "상태/Status",
+    ];
+    const rows = data.employees.map((e) => {
+      const s = summarizeEmployee(e, data);
+      return [
+        e.name,
+        e.english_name,
+        e.team,
+        e.position,
+        e.join_date,
+        e.annual_leave_entitlement,
+        e.carried_over_leave,
+        e.used_adjustment ?? 0,
+        s.used,
+        s.remaining,
+        e.employment_status,
+      ];
+    });
+    downloadCSV(`employees_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+  }
 
   const [team, setTeam] = useState<TeamName | "ALL">("ALL");
   const [position, setPosition] = useState<Position | "ALL">("ALL");
@@ -61,9 +95,16 @@ export default function EmployeesPage() {
           "employees.active"
         )} ${data.employees.filter((e) => e.employment_status === "재직").length}`}
         action={
-          <Button onClick={() => setCreating(true)}>
-            <Plus size={16} /> {t("employees.addEmployee")}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportCSV}>
+              <Download size={16} /> {t("common.export")}
+            </Button>
+            {isAdmin && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus size={16} /> {t("employees.addEmployee")}
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -177,23 +218,29 @@ export default function EmployeesPage() {
                     </td>
                     <td className={td}>
                       <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => setEditing(e)}
-                          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800"
-                          title={t("common.edit")}
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`${e.name} — ${t("employees.confirmDelete")}`))
-                              deleteEmployee(e.id);
-                          }}
-                          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                          title={t("common.delete")}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {isAdmin ? (
+                          <>
+                            <button
+                              onClick={() => setEditing(e)}
+                              className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800"
+                              title={t("common.edit")}
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`${e.name} — ${t("employees.confirmDelete")}`))
+                                  deleteEmployee(e.id);
+                              }}
+                              className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                              title={t("common.delete")}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
+                        )}
                       </div>
                     </td>
                   </tr>

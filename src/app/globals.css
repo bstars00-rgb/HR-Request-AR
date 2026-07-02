@@ -37,3 +37,21 @@ body {
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
 }
+
+/* 인쇄용 — 사이드바/필터/버튼 숨기고 캘린더만 */
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print-area {
+    break-inside: avoid;
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n, KO_WEEKDAYS, EN_WEEKDAYS } from "@/lib/i18n";
 import { Card, PageHeader, Select, Button } from "@/components/ui";
@@ -64,9 +64,17 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <PageHeader title={t("cal.title")} subtitle={t("cal.subtitle")} />
+      <PageHeader
+        title={t("cal.title")}
+        subtitle={t("cal.subtitle")}
+        action={
+          <Button variant="outline" onClick={() => window.print()} className="no-print">
+            <Printer size={16} /> {t("cal.print")}
+          </Button>
+        }
+      />
 
-      <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+      <Card className="no-print mb-4 flex flex-wrap items-center gap-3 p-3">
         <div className="flex items-center gap-1">
           <Button variant="ghost" onClick={prev} aria-label={t("cal.prevMonth")}>
             <ChevronLeft size={18} />
@@ -122,6 +130,11 @@ export default function CalendarPage() {
         </div>
       </Card>
 
+      {/* 인쇄 시에만 보이는 월 제목 */}
+      <div className="mb-2 hidden text-lg font-bold print:block">
+        {monthLabelL(year, month0, lang)}
+      </div>
+
       <div className="mb-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
         {LEAVE_TYPE_KEYS.map((ty) => (
           <span key={ty} className="inline-flex items-center gap-1">
@@ -134,7 +147,7 @@ export default function CalendarPage() {
         ))}
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="print-area overflow-hidden">
         <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
           {WEEKDAYS.map((d, i) => (
             <div key={d} className={`py-2 ${i >= 5 ? "text-red-400" : ""}`}>
