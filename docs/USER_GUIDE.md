@@ -36,26 +36,23 @@
 | 메뉴 | 내용 |
 |------|------|
 | **대시보드** | 오늘/이번주/이번달 일정, 오늘 자리 비움(출장·개인), 팀별·유형별 집계 |
-| **캘린더** | 월간 달력. 팀·구성원·유형 필터, 색상 구분. **인쇄** 버튼 |
+| **캘린더** | 월간 달력에서 일정 보기 + **날짜 클릭으로 등록, 일정 클릭으로 수정/삭제**. 팀·구성원·유형 필터, 인쇄·내보내기 |
 | **구성원** | 팀 멤버 명단. **내보내기(CSV)** |
-| **내 일정** | 일정 등록/수정, 구성원별 일정 이력 |
 | **팀 현황** | 팀별 인원·이번 주 일정·예정 일정 |
 | **설정** | (관리자) 팀 관리, 공휴일, 편집 잠금 PIN |
 
-### 5. 자주 하는 일
-
-**내 일정 확인하기**
-1. **내 일정** 메뉴 → 상단 **구성원 선택**에서 본인 이름 선택
-2. 내 일정 이력(기간·유형·내용)이 표시됩니다.
+### 5. 자주 하는 일 (전부 캘린더에서)
 
 **일정 등록하기**
-1. **내 일정** → 우측 상단 **+ 일정 등록**
-2. 구성원(본인) / 유형 / 시작일·종료일 / 내용 입력
-3. **일정 등록** 클릭 → 즉시 모두에게 공유됨
+1. **캘린더**에서 **원하는 날짜 칸을 클릭** (또는 우측 상단 **+ 일정 등록**)
+2. 구성원(본인) / 유형 / 기간 / 내용 입력 → **일정 등록**
+3. 즉시 모두에게 공유됩니다.
 
-**전체 일정 보기**: **캘린더**에서 누가 언제 무엇을 하는지 한눈에. 필터로 팀/사람/유형별 보기.
+**일정 수정/삭제**: 달력의 **일정(색깔 막대)을 클릭** → 수정 또는 삭제.
 
-**엑셀로 내보내기**: 구성원 또는 내 일정 화면의 **내보내기(CSV)** 버튼.
+**내 일정만 보기**: 캘린더 상단 **구성원 필터**에서 본인 이름 선택.
+
+**엑셀로 내보내기**: 캘린더 우측 상단 **내보내기(CSV)** → 표시 중인 달의 일정 다운로드.
 
 **캘린더 인쇄**: 캘린더 우측 상단 **인쇄** → 달력만 출력.
 
@@ -95,26 +92,23 @@
 | Menu | What it does |
 |------|------|
 | **Dashboard** | Today / this week / this month, who's away today (trip·personal), counts by team & category |
-| **Calendar** | Monthly calendar. Filter by team/member/category, color-coded. **Print** button |
+| **Calendar** | Monthly calendar — **click a day to add, click an entry to edit/delete**. Team/member/category filters, print & export |
 | **Members** | Team member list. **Export (CSV)** |
-| **My Schedule** | Add/edit entries, view a member's history |
 | **Teams** | Headcount, this week's entries, upcoming per team |
 | **Settings** | (Admin) teams, holidays, edit-lock PIN |
 
-### 5. Common tasks
-
-**Check my schedule**
-1. **My Schedule** → pick your name in the **member filter** at the top.
-2. Your entries (period · category · details) appear.
+### 5. Common tasks (all in the Calendar)
 
 **Add a schedule entry**
-1. **My Schedule** → **+ Add Schedule** (top right)
-2. Fill in member (you) / category / start–end dates / details
-3. Click **Add Schedule** → shared with everyone instantly
+1. On the **Calendar**, **click the day** you want (or **+ Add Schedule**, top right)
+2. Fill in member (you) / category / dates / details → **Add Schedule**
+3. Shared with everyone instantly.
 
-**See everyone's schedule**: open **Calendar** — filter by team, person, or category.
+**Edit / delete an entry**: **click the colored entry** on the calendar → edit or delete.
 
-**Export to Excel**: **Export (CSV)** button on Members or My Schedule.
+**See only my schedule**: pick your name in the **member filter** above the calendar.
+
+**Export to Excel**: **Export (CSV)** (top-right of Calendar) → downloads the displayed month.
 
 **Print calendar**: **Print** (top-right of Calendar) → prints just the calendar.
 
@@ -156,26 +150,23 @@
 | Menu | Chức năng |
 |------|------|
 | **Dashboard** | Lịch hôm nay / tuần này / tháng này, ai vắng mặt hôm nay, thống kê theo nhóm & loại |
-| **Calendar** | Lịch tháng. Lọc theo nhóm/thành viên/loại, có màu. Nút **Print** |
+| **Calendar** | Lịch tháng — **bấm vào ngày để thêm, bấm vào lịch để sửa/xóa**. Lọc theo nhóm/thành viên/loại, in & xuất file |
 | **Members** | Danh sách thành viên. **Export (CSV)** |
-| **My Schedule** | Thêm/sửa lịch, xem lịch của từng người |
 | **Teams** | Số người, lịch tuần này, lịch sắp tới theo nhóm |
 | **Settings** | (Quản trị) nhóm, ngày lễ, PIN khóa chỉnh sửa |
 
-### 5. Thao tác thường dùng
-
-**Xem lịch của tôi**
-1. **My Schedule** → chọn tên bạn ở **bộ lọc thành viên** phía trên.
-2. Lịch của bạn (thời gian · loại · nội dung) sẽ hiển thị.
+### 5. Thao tác thường dùng (tất cả trên Calendar)
 
 **Đăng ký lịch**
-1. **My Schedule** → **+ Add Schedule** (góc trên phải)
-2. Nhập thành viên (bạn) / loại / ngày bắt đầu–kết thúc / nội dung
-3. Bấm **Add Schedule** → chia sẻ ngay với cả nhóm
+1. Trên **Calendar**, **bấm vào ngày** bạn muốn (hoặc **+ Add Schedule**, góc trên phải)
+2. Nhập thành viên (bạn) / loại / thời gian / nội dung → **Add Schedule**
+3. Chia sẻ ngay với cả nhóm.
 
-**Xem lịch cả nhóm**: mở **Calendar** — lọc theo nhóm, người hoặc loại.
+**Sửa / xóa lịch**: **bấm vào ô lịch có màu** trên Calendar → sửa hoặc xóa.
 
-**Xuất ra Excel**: nút **Export (CSV)** ở Members hoặc My Schedule.
+**Chỉ xem lịch của tôi**: chọn tên bạn ở **bộ lọc thành viên** phía trên Calendar.
+
+**Xuất ra Excel**: nút **Export (CSV)** (góc trên phải Calendar) → tải lịch của tháng đang xem.
 
 **In lịch**: nút **Print** (góc trên phải Calendar) → chỉ in phần lịch.
 

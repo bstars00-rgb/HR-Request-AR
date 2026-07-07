@@ -1,16 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, Plus, Download } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n, KO_WEEKDAYS, EN_WEEKDAYS } from "@/lib/i18n";
-import { Card, PageHeader, Select, Button } from "@/components/ui";
+import { Card, PageHeader, Select, Button, Modal } from "@/components/ui";
+import LeaveForm from "@/components/LeaveForm";
+import { downloadCSV } from "@/lib/csv";
 import { monthGrid, monthLabelL, toISO, today, isWeekend } from "@/lib/date";
-import { CATEGORY_KEYS, TeamName, categoryColor } from "@/lib/types";
+import {
+  CATEGORY_KEYS,
+  TeamName,
+  categoryColor,
+  LeaveRequest,
+} from "@/lib/types";
 import { leavesOnDate } from "@/lib/leave-calc";
 
 export default function CalendarPage() {
-  const { data } = useStore();
+  const { data, deleteLeave, isAdmin } = useStore();
   const { t, lang } = useI18n();
   const base = today();
   const [year, setYear] = useState(base.getFullYear());
@@ -19,6 +26,11 @@ export default function CalendarPage() {
   const [teamFilter, setTeamFilter] = useState<TeamName | "ALL">("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [empFilter, setEmpFilter] = useState<string>("ALL");
+
+  // 등록/수정 모달 상태
+  const [creating, setCreating] = useState(false);
+  const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
+  const [editing, setEditing] = useState<LeaveRequest | null>(null);
 
   const WEEKDAYS = lang === "en" ? EN_WEEKDAYS : KO_WEEKDAYS;
 
@@ -52,13 +64,46 @@ export default function CalendarPage() {
     setMonth0(base.getMonth());
   }
 
+  function matchesFilters(l: LeaveRequest) {
+    if (teamFilter !== "ALL" && l.team !== teamFilter) return false;
+    if (typeFilter !== "ALL" && l.leave_type !== typeFilter) return false;
+    if (empFilter !== "ALL" && l.employee_id !== empFilter) return false;
+    return true;
+  }
+
   function leavesForCell(dISO: string) {
-    return leavesOnDate(dISO, data, { includePending: true }).filter((l) => {
-      if (teamFilter !== "ALL" && l.team !== teamFilter) return false;
-      if (typeFilter !== "ALL" && l.leave_type !== typeFilter) return false;
-      if (empFilter !== "ALL" && l.employee_id !== empFilter) return false;
-      return true;
-    });
+    return leavesOnDate(dISO, data, { includePending: true }).filter(matchesFilters);
+  }
+
+  // 날짜 클릭 → 그 날짜로 일정 등록
+  function onDayClick(dISO: string) {
+    if (!isAdmin) return;
+    setDefaultDate(dISO);
+    setCreating(true);
+  }
+
+  // 표시 중인 달과 겹치는 일정(필터 적용)을 CSV로
+  function exportCSV() {
+    const monthStart = toISO(new Date(year, month0, 1));
+    const monthEnd = toISO(new Date(year, month0 + 1, 0));
+    const rows = data.leaves
+      .filter(matchesFilters)
+      .filter((l) => l.start_date <= monthEnd && l.end_date >= monthStart)
+      .sort((a, b) => (a.start_date < b.start_date ? -1 : 1))
+      .map((l) => [
+        empById[l.employee_id]?.name ?? "",
+        l.team,
+        l.leave_type,
+        l.start_date,
+        l.end_date,
+        l.days_count,
+        l.reason,
+      ]);
+    downloadCSV(
+      `schedule_${year}-${String(month0 + 1).padStart(2, "0")}.csv`,
+      ["구성원/Member", "팀/Team", "유형/Category", "시작일/Start", "종료일/End", "일수/Days", "내용/Details"],
+      rows
+    );
   }
 
   return (
@@ -67,9 +112,24 @@ export default function CalendarPage() {
         title={t("cal.title")}
         subtitle={t("cal.subtitle")}
         action={
-          <Button variant="outline" onClick={() => window.print()} className="no-print">
-            <Printer size={16} /> {t("cal.print")}
-          </Button>
+          <div className="no-print flex gap-2">
+            <Button variant="outline" onClick={exportCSV}>
+              <Download size={16} /> {t("common.export")}
+            </Button>
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer size={16} /> {t("cal.print")}
+            </Button>
+            {isAdmin && (
+              <Button
+                onClick={() => {
+                  setDefaultDate(undefined);
+                  setCreating(true);
+                }}
+              >
+                <Plus size={16} /> {t("dash.addLeave")}
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -134,7 +194,7 @@ export default function CalendarPage() {
         {monthLabelL(year, month0, lang)}
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
         {CATEGORY_KEYS.map((ty) => (
           <span key={ty} className="inline-flex items-center gap-1">
             <span
@@ -144,6 +204,9 @@ export default function CalendarPage() {
             {t(`category.${ty}`)}
           </span>
         ))}
+        {isAdmin && (
+          <span className="no-print ml-auto text-slate-400">{t("cal.hint")}</span>
+        )}
       </div>
 
       <Card className="print-area overflow-hidden">
@@ -164,11 +227,12 @@ export default function CalendarPage() {
             return (
               <div
                 key={idx}
+                onClick={() => onDayClick(dISO)}
                 className={`min-h-[92px] border-b border-r border-slate-100 p-1.5 dark:border-slate-800 ${
                   inMonth
                     ? "bg-white dark:bg-slate-900"
                     : "bg-slate-50/60 dark:bg-slate-950/40"
-                }`}
+                } ${isAdmin ? "cursor-pointer hover:bg-brand-50/50 dark:hover:bg-slate-800/60" : ""}`}
               >
                 <div className="mb-1 flex items-center justify-between">
                   <span
@@ -195,24 +259,19 @@ export default function CalendarPage() {
                   {cellLeaves.slice(0, 3).map((l) => {
                     const emp = empById[l.employee_id];
                     const color = categoryColor(l.leave_type);
-                    const half =
-                      l.half_day_type !== "none"
-                        ? l.half_day_type === "AM"
-                          ? t("half.amShort")
-                          : t("half.pmShort")
-                        : "";
                     return (
                       <div
                         key={l.id}
-                        className="truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
-                        style={{
-                          backgroundColor: color,
-                          opacity: l.status === "Pending" ? 0.55 : 1,
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAdmin) setEditing(l);
                         }}
-                        title={`${emp?.name} · ${l.leave_type}${half} · ${l.status}`}
+                        className="truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
+                        style={{ backgroundColor: color }}
+                        title={`${emp?.name} · ${l.reason || t(`category.${l.leave_type}`)}`}
                       >
                         {emp?.name}
-                        {half}
+                        {l.reason ? ` · ${l.reason}` : ""}
                       </div>
                     );
                   })}
@@ -227,6 +286,37 @@ export default function CalendarPage() {
           })}
         </div>
       </Card>
+
+      {/* 등록 모달 (날짜 클릭 시 그 날짜 프리필) */}
+      <Modal
+        open={creating}
+        onClose={() => setCreating(false)}
+        title={t("dash.addLeave")}
+        wide
+      >
+        {creating && (
+          <LeaveForm defaultDate={defaultDate} onDone={() => setCreating(false)} />
+        )}
+      </Modal>
+
+      {/* 수정/삭제 모달 (일정 클릭 시) */}
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title={t("leaves.editLeave")}
+        wide
+      >
+        {editing && (
+          <LeaveForm
+            initial={editing}
+            onDone={() => setEditing(null)}
+            onDelete={() => {
+              deleteLeave(editing.id);
+              setEditing(null);
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   CalendarDays,
   Users,
-  PlaneTakeoff,
   UsersRound,
   Settings as SettingsIcon,
   Menu,
@@ -26,7 +25,6 @@ const NAV = [
   { href: "/", key: "nav.dashboard", icon: LayoutDashboard },
   { href: "/calendar", key: "nav.calendar", icon: CalendarDays },
   { href: "/employees", key: "nav.employees", icon: Users },
-  { href: "/leaves", key: "nav.leaves", icon: PlaneTakeoff },
   { href: "/teams", key: "nav.teams", icon: UsersRound },
   { href: "/settings", key: "nav.settings", icon: SettingsIcon },
 ];

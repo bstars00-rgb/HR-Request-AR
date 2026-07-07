@@ -9,11 +9,13 @@ import { Button, Field, Input, Select, Textarea } from "./ui";
 
 interface Props {
   initial?: LeaveRequest;
+  defaultDate?: string; // 캘린더에서 날짜 클릭 시 프리필
   onDone: () => void;
+  onDelete?: () => void; // 수정 모드에서 삭제 버튼 표시
 }
 
 // 일정 등록/수정 폼 (구 LeaveForm)
-export default function LeaveForm({ initial, onDone }: Props) {
+export default function LeaveForm({ initial, defaultDate, onDone, onDelete }: Props) {
   const { data, addLeave, updateLeave } = useStore();
   const { t } = useI18n();
   const members = data.employees.filter((e) => e.employment_status !== "퇴사");
@@ -24,8 +26,12 @@ export default function LeaveForm({ initial, onDone }: Props) {
   const [category, setCategory] = useState<string>(
     initial?.leave_type ?? "Fair"
   );
-  const [startDate, setStartDate] = useState(initial?.start_date ?? todayISO());
-  const [endDate, setEndDate] = useState(initial?.end_date ?? todayISO());
+  const [startDate, setStartDate] = useState(
+    initial?.start_date ?? defaultDate ?? todayISO()
+  );
+  const [endDate, setEndDate] = useState(
+    initial?.end_date ?? defaultDate ?? todayISO()
+  );
   const [reason, setReason] = useState(initial?.reason ?? "");
 
   function submit(e: React.FormEvent) {
@@ -109,13 +115,26 @@ export default function LeaveForm({ initial, onDone }: Props) {
         />
       </Field>
 
-      <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="outline" onClick={onDone}>
-          {t("common.cancel")}
-        </Button>
-        <Button type="submit">
-          {initial ? t("common.saveEdit") : t("form.submitNew")}
-        </Button>
+      <div className="flex items-center gap-2 pt-1">
+        {initial && onDelete && (
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              if (confirm(t("leaves.confirmDelete"))) onDelete();
+            }}
+          >
+            {t("common.delete")}
+          </Button>
+        )}
+        <div className="ml-auto flex gap-2">
+          <Button type="button" variant="outline" onClick={onDone}>
+            {t("common.cancel")}
+          </Button>
+          <Button type="submit">
+            {initial ? t("common.saveEdit") : t("form.submitNew")}
+          </Button>
+        </div>
       </div>
     </form>
   );

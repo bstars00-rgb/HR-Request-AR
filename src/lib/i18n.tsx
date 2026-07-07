@@ -103,6 +103,7 @@ const ko: Dict = {
   "cal.prevMonth": "이전 달",
   "cal.nextMonth": "다음 달",
   "cal.more": "명 더",
+  "cal.hint": "날짜를 클릭해 일정 추가 · 일정을 클릭해 수정",
 
   // 직원
   "employees.title": "직원 관리",
@@ -322,6 +323,7 @@ const en: Dict = {
   "cal.prevMonth": "Previous month",
   "cal.nextMonth": "Next month",
   "cal.more": "more",
+  "cal.hint": "Click a day to add · click an entry to edit",
 
   "employees.title": "Employees",
   "employees.total": "Total",
