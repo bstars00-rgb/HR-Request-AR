@@ -6,8 +6,8 @@ import { ThemeProvider } from "@/lib/theme";
 import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "연차관리 플랫폼 · Leave Platform",
-  description: "OP / CT / Sales 팀 휴가·연차 관리 (사내 공유용)",
+  title: "OMH Planner · 팀 일정 공유",
+  description: "OMH 팀 일정 공유 플랫폼 — 박람회·출장·내부업무·개인 일정을 한눈에",
 };
 
 // 다크모드 깜빡임(FOUC) 방지 — 페인트 전에 테마 클래스 적용

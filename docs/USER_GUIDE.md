@@ -1,4 +1,4 @@
-# 일정 공유 플랫폼 사용 설명서 · User Guide · Hướng dẫn sử dụng
+# OMH Planner 사용 설명서 · User Guide · Hướng dẫn sử dụng
 
 **URL:** https://bstars00-rgb.github.io/HR-Request-AR/
 

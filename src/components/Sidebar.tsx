@@ -128,8 +128,8 @@ export default function Sidebar() {
       {/* 데스크탑 고정 사이드바 */}
       <aside className="fixed left-0 top-0 z-20 hidden h-screen w-60 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-5 dark:border-slate-800">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-            HR
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-[10px] font-bold text-white">
+            OMH
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">

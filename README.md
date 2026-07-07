@@ -1,7 +1,7 @@
-# 연차관리 플랫폼 (HR Leave Platform)
+# OMH Planner (팀 일정 공유 플랫폼)
 
-OP / CT / Sales / GSM / Air / Management 팀의 **연차·반차·병가·공휴일·휴가 현황**을
-Excel 대신 웹에서 관리하는 사내 공유용 플랫폼입니다.
+팀의 **박람회/세일즈콜·출장·내부업무·개인 일정**을 Excel 대신 웹에서
+등록하고 한눈에 공유하는 사내 플랫폼입니다.
 
 - **Frontend**: Next.js 15 (App Router) + React 19 + TailwindCSS
 - **다국어**: 한국어 / English 토글 (좌측 하단)

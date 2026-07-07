@@ -20,7 +20,7 @@ type Dict = Record<string, string>;
 
 const ko: Dict = {
   // 브랜드 / 사이드바
-  "brand.title": "일정 공유",
+  "brand.title": "OMH Planner",
   "brand.subtitle": "팀 일정 공유 플랫폼",
   "brand.version": "v0.3 · 사내 공유용",
   "nav.dashboard": "대시보드",
@@ -246,7 +246,7 @@ const ko: Dict = {
 };
 
 const en: Dict = {
-  "brand.title": "Schedule Share",
+  "brand.title": "OMH Planner",
   "brand.subtitle": "Team Schedule Platform",
   "brand.version": "v0.3 · Internal",
   "nav.dashboard": "Dashboard",
