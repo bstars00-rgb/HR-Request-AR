@@ -103,19 +103,9 @@ export default function SettingsPage() {
                   value={tm.manager_name}
                   onChange={(e) => updateTeam(tm.id, { manager_name: e.target.value })}
                   placeholder={t("common.manager")}
-                  className="w-28"
+                  className="max-w-[200px] flex-1"
                 />
                 <div className="ml-auto flex items-center gap-1">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={tm.warning_threshold}
-                    onChange={(e) =>
-                      updateTeam(tm.id, { warning_threshold: Number(e.target.value) })
-                    }
-                    className="w-14 text-right"
-                  />
-                  <span className="text-xs text-slate-400">{t("settings.orMore")}</span>
                   <button
                     onClick={() => handleDeleteTeam(tm.id, tm.team_name)}
                     className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
