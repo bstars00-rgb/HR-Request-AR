@@ -12,6 +12,7 @@ import {
   TEAM_NAMES,
   TeamName,
 } from "./types";
+import fairsData from "./fairs.json";
 
 const now = "2026-01-01T00:00:00.000Z";
 
@@ -104,7 +105,34 @@ TEAM_NAMES.forEach((team) => {
 });
 
 // 공휴일 — 베트남/한국/싱가포르 예시
+// 2026 여행 박람회 일정 (fairs.json) → 기간을 하루 단위 배지로 펼침 (notes: "FAIR")
+function expandFairs(): Holiday[] {
+  const out: Holiday[] = [];
+  for (const f of fairsData as { name: string; start: string; end: string; place: string }[]) {
+    const [sy, sm, sd] = f.start.split("-").map(Number);
+    const [ey, em, ed] = f.end.split("-").map(Number);
+    let cur = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+    while (cur <= end) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, "0");
+      const d = String(cur.getDate()).padStart(2, "0");
+      out.push({
+        id: uid("fair"),
+        date: `${y}-${m}-${d}`,
+        country: f.place,
+        holiday_name: f.name,
+        applicable_team: "ALL",
+        notes: "FAIR",
+      });
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+    }
+  }
+  return out;
+}
+
 const holidays: Holiday[] = [
+  ...expandFairs(),
   { id: uid("hol"), date: "2026-01-01", country: "한국", holiday_name: "신정", applicable_team: "ALL", notes: "" },
   { id: uid("hol"), date: "2026-02-17", country: "베트남", holiday_name: "Tết (설)", applicable_team: "ALL", notes: "베트남 최대 명절" },
   { id: uid("hol"), date: "2026-04-30", country: "베트남", holiday_name: "통일기념일", applicable_team: "ALL", notes: "" },

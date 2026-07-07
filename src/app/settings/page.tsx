@@ -167,7 +167,7 @@ export default function SettingsPage() {
       </div>
 
       <HolidaySection
-        holidays={data.holidays}
+        holidays={data.holidays.filter((h) => h.notes !== "FAIR")}
         teamNames={data.teams.map((tm) => tm.team_name)}
         addHoliday={addHoliday}
         deleteHoliday={deleteHoliday}

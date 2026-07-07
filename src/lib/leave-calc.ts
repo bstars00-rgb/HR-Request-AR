@@ -22,7 +22,10 @@ export function computeLeaveDays(
     return 0.5;
   }
 
-  const holidaySet = new Set(data.holidays.map((h) => h.date));
+  // 박람회 배지(notes: FAIR)는 공휴일이 아니므로 일수 계산에서 제외하지 않음
+  const holidaySet = new Set(
+    data.holidays.filter((h) => h.notes !== "FAIR").map((h) => h.date)
+  );
   const days = eachDay(leave.start_date, leave.end_date);
 
   let count = 0;

@@ -39,10 +39,20 @@ export default function CalendarPage() {
     [data.employees]
   );
 
-  const holidayByDate = useMemo(
-    () => Object.fromEntries(data.holidays.map((h) => [h.date, h])),
-    [data.holidays]
-  );
+  // 날짜별 공휴일/박람회 배지 (하루에 여러 개 가능)
+  const holidaysByDate = useMemo(() => {
+    const map: Record<string, typeof data.holidays> = {};
+    for (const h of data.holidays) {
+      (map[h.date] ??= []).push(h);
+    }
+    // 공휴일 먼저, 박람회 나중 (표시 순서)
+    for (const k of Object.keys(map)) {
+      map[k].sort((a, b) =>
+        (a.notes === "FAIR" ? 1 : 0) - (b.notes === "FAIR" ? 1 : 0)
+      );
+    }
+    return map;
+  }, [data.holidays]);
 
   const grid = useMemo(() => monthGrid(year, month0), [year, month0]);
   const todayStr = toISO(today());
@@ -222,7 +232,7 @@ export default function CalendarPage() {
             const dISO = toISO(d);
             const inMonth = d.getMonth() === month0;
             const isToday = dISO === todayStr;
-            const holiday = holidayByDate[dISO];
+            const dayBadges = holidaysByDate[dISO] ?? [];
             const cellLeaves = leavesForCell(dISO);
             return (
               <div
@@ -234,9 +244,9 @@ export default function CalendarPage() {
                     : "bg-slate-50/60 dark:bg-slate-950/40"
                 } ${isAdmin ? "cursor-pointer hover:bg-brand-50/50 dark:hover:bg-slate-800/60" : ""}`}
               >
-                <div className="mb-1 flex items-center justify-between">
+                <div className="mb-1 flex items-start justify-between gap-1">
                   <span
-                    className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+                    className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 text-xs ${
                       isToday
                         ? "bg-brand-600 font-bold text-white"
                         : isWeekend(d)
@@ -246,12 +256,21 @@ export default function CalendarPage() {
                   >
                     {d.getDate()}
                   </span>
-                  {holiday && (
-                    <span
-                      className="truncate rounded bg-slate-200 px-1 text-[10px] text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                      title={`${holiday.country} · ${holiday.holiday_name}`}
-                    >
-                      {holiday.holiday_name}
+                  {dayBadges.length > 0 && (
+                    <span className="flex min-w-0 flex-col items-end gap-0.5">
+                      {dayBadges.slice(0, 2).map((h) => (
+                        <span
+                          key={h.id}
+                          className={`max-w-full truncate rounded px-1 text-[10px] ${
+                            h.notes === "FAIR"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                              : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                          title={`${h.country} · ${h.holiday_name}`}
+                        >
+                          {h.holiday_name}
+                        </span>
+                      ))}
                     </span>
                   )}
                 </div>
