@@ -26,7 +26,7 @@ const ko: Dict = {
   "nav.dashboard": "대시보드",
   "nav.calendar": "캘린더",
   "nav.employees": "구성원",
-  "nav.leaves": "일정 등록",
+  "nav.leaves": "내 일정",
   "nav.teams": "팀 현황",
   "nav.settings": "설정",
   "menu": "메뉴",
