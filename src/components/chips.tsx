@@ -2,22 +2,12 @@
 
 import {
   LeaveStatus,
-  LeaveTypeKey,
   TeamName,
   teamColor,
+  categoryColor,
+  CATEGORY_KEYS,
 } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
-
-// 휴가 유형 색상 (요청 D 색상 규칙)
-export const LEAVE_TYPE_COLORS: Record<LeaveTypeKey, string> = {
-  "Annual Leave": "#2563eb", // 파란색
-  "Half-day Leave": "#0ea5e9",
-  "Sick Leave": "#dc2626", // 빨간색
-  "Business Trip": "#7c3aed", // 보라색
-  "Public Holiday": "#64748b", // 회색
-  "Unpaid Leave": "#ea580c", // 주황색
-  Other: "#9333ea",
-};
 
 const STATUS_STYLES: Record<LeaveStatus, string> = {
   Approved:
@@ -53,8 +43,13 @@ export function TeamChip({ team }: { team: TeamName }) {
   );
 }
 
-export function LeaveTypeChip({ type }: { type: LeaveTypeKey }) {
-  const color = LEAVE_TYPE_COLORS[type];
+// 일정 카테고리 칩 (구 LeaveTypeChip — 컴포넌트명 유지)
+export function LeaveTypeChip({ type }: { type: string }) {
+  const { t } = useI18n();
+  const color = categoryColor(type);
+  const label = (CATEGORY_KEYS as string[]).includes(type)
+    ? t(`category.${type}`)
+    : type;
   return (
     <span
       className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
@@ -64,7 +59,13 @@ export function LeaveTypeChip({ type }: { type: LeaveTypeKey }) {
         className="h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: color }}
       />
-      {type}
+      {label}
     </span>
   );
 }
+
+// 카테고리 색상 맵(하위호환 export) — 캘린더 등에서 사용
+export const LEAVE_TYPE_COLORS = new Proxy(
+  {},
+  { get: (_t, key: string) => categoryColor(key) }
+) as Record<string, string>;

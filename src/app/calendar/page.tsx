@@ -5,9 +5,8 @@ import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n, KO_WEEKDAYS, EN_WEEKDAYS } from "@/lib/i18n";
 import { Card, PageHeader, Select, Button } from "@/components/ui";
-import { LEAVE_TYPE_COLORS } from "@/components/chips";
 import { monthGrid, monthLabelL, toISO, today, isWeekend } from "@/lib/date";
-import { LEAVE_TYPE_KEYS, TeamName, LeaveTypeKey } from "@/lib/types";
+import { CATEGORY_KEYS, TeamName, categoryColor } from "@/lib/types";
 import { leavesOnDate } from "@/lib/leave-calc";
 
 export default function CalendarPage() {
@@ -18,7 +17,7 @@ export default function CalendarPage() {
   const [month0, setMonth0] = useState(base.getMonth());
 
   const [teamFilter, setTeamFilter] = useState<TeamName | "ALL">("ALL");
-  const [typeFilter, setTypeFilter] = useState<LeaveTypeKey | "ALL">("ALL");
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [empFilter, setEmpFilter] = useState<string>("ALL");
 
   const WEEKDAYS = lang === "en" ? EN_WEEKDAYS : KO_WEEKDAYS;
@@ -117,13 +116,13 @@ export default function CalendarPage() {
           </Select>
           <Select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as LeaveTypeKey | "ALL")}
+            onChange={(e) => setTypeFilter(e.target.value)}
             className="w-auto"
           >
             <option value="ALL">{t("common.allTypes")}</option>
-            {LEAVE_TYPE_KEYS.map((ty) => (
+            {CATEGORY_KEYS.map((ty) => (
               <option key={ty} value={ty}>
-                {ty}
+                {t(`category.${ty}`)}
               </option>
             ))}
           </Select>
@@ -136,13 +135,13 @@ export default function CalendarPage() {
       </div>
 
       <div className="mb-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-        {LEAVE_TYPE_KEYS.map((ty) => (
+        {CATEGORY_KEYS.map((ty) => (
           <span key={ty} className="inline-flex items-center gap-1">
             <span
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: LEAVE_TYPE_COLORS[ty] }}
+              style={{ backgroundColor: categoryColor(ty) }}
             />
-            {ty}
+            {t(`category.${ty}`)}
           </span>
         ))}
       </div>
@@ -195,7 +194,7 @@ export default function CalendarPage() {
                 <div className="space-y-0.5">
                   {cellLeaves.slice(0, 3).map((l) => {
                     const emp = empById[l.employee_id];
-                    const color = LEAVE_TYPE_COLORS[l.leave_type];
+                    const color = categoryColor(l.leave_type);
                     const half =
                       l.half_day_type !== "none"
                         ? l.half_day_type === "AM"

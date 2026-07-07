@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -13,7 +13,7 @@ import {
   Modal,
   EmptyState,
 } from "@/components/ui";
-import { StatusChip, TeamChip, LeaveTypeChip } from "@/components/chips";
+import { TeamChip, LeaveTypeChip } from "@/components/chips";
 import LeaveForm from "@/components/LeaveForm";
 import {
   toISO,
@@ -24,8 +24,12 @@ import {
   rangesOverlap,
   fmtDate,
 } from "@/lib/date";
-import { leavesOnDate, summarizeEmployee } from "@/lib/leave-calc";
-import { TeamName, teamColor } from "@/lib/types";
+import { teamColor, CATEGORY_KEYS, categoryColor } from "@/lib/types";
+
+// 특정 날짜에 걸치는 일정
+function entriesOnDate(dISO: string, leaves: any[]) {
+  return leaves.filter((l) => dISO >= l.start_date && dISO <= l.end_date);
+}
 
 export default function DashboardPage() {
   const { data, ready, isAdmin } = useStore();
@@ -46,84 +50,63 @@ export default function DashboardPage() {
     [data.teams]
   );
 
-  const activeLeaves = useMemo(
-    () =>
-      data.leaves.filter(
-        (l) => l.status === "Approved" || l.status === "Pending"
-      ),
-    [data.leaves]
+  const todayEntries = useMemo(
+    () => entriesOnDate(tISO, data.leaves),
+    [tISO, data.leaves]
   );
 
-  const todayLeaves = useMemo(
-    () => leavesOnDate(tISO, data, { includePending: true }),
-    [tISO, data]
-  );
-
-  const weekLeaves = useMemo(
+  const weekEntries = useMemo(
     () =>
-      activeLeaves.filter((l) =>
+      data.leaves.filter((l) =>
         rangesOverlap(l.start_date, l.end_date, toISO(week.start), toISO(week.end))
       ),
-    [activeLeaves, week.start, week.end]
+    [data.leaves, week.start, week.end]
   );
 
-  const monthLeaves = useMemo(
+  const monthEntries = useMemo(
     () =>
-      activeLeaves.filter((l) =>
+      data.leaves.filter((l) =>
         rangesOverlap(l.start_date, l.end_date, toISO(month.start), toISO(month.end))
       ),
-    [activeLeaves, month.start, month.end]
+    [data.leaves, month.start, month.end]
+  );
+
+  // 오늘 자리 비움 = 출장 + 개인/휴가
+  const awayToday = useMemo(
+    () => todayEntries.filter((l) => l.leave_type === "Trip" || l.leave_type === "Personal"),
+    [todayEntries]
   );
 
   const teamTodayCount = useMemo(() => {
     const counts: Record<string, number> = {};
     teamNames.forEach((tm) => (counts[tm] = 0));
-    todayLeaves.forEach((l) => {
+    todayEntries.forEach((l) => {
       counts[l.team] = (counts[l.team] ?? 0) + 1;
     });
     return counts;
-  }, [todayLeaves, teamNames]);
+  }, [todayEntries, teamNames]);
 
-  const summaries = useMemo(
-    () =>
-      data.employees
-        .filter((e) => e.employment_status === "재직")
-        .map((e) => ({ emp: e, sum: summarizeEmployee(e, data) })),
-    [data]
-  );
-
-  const bottomRemaining = useMemo(
-    () => [...summaries].sort((a, b) => a.sum.remaining - b.sum.remaining).slice(0, 5),
-    [summaries]
-  );
-
-  const topUsage = useMemo(
-    () => [...summaries].sort((a, b) => b.sum.usageRate - a.sum.usageRate).slice(0, 5),
-    [summaries]
-  );
-
-  const risks = useMemo(() => {
-    const out: { date: string; team: TeamName; count: number; threshold: number }[] =
-      [];
-    const teamThreshold: Record<string, number> = {};
-    teamNames.forEach((tm) => {
-      teamThreshold[tm] =
-        data.teams.find((x) => x.team_name === tm)?.warning_threshold ?? 99;
+  // 이번 달 카테고리별 건수
+  const catMonth = useMemo(() => {
+    const map: Record<string, number> = {};
+    CATEGORY_KEYS.forEach((c) => (map[c] = 0));
+    monthEntries.forEach((l) => {
+      map[l.leave_type] = (map[l.leave_type] ?? 0) + 1;
     });
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today());
-      d.setDate(d.getDate() + i);
-      const dISO = toISO(d);
-      const onLeave = leavesOnDate(dISO, data, { includePending: true });
-      teamNames.forEach((tm) => {
-        const c = onLeave.filter((l) => l.team === tm).length;
-        if (c >= teamThreshold[tm] && c > 0) {
-          out.push({ date: dISO, team: tm, count: c, threshold: teamThreshold[tm] });
-        }
-      });
-    }
-    return out;
-  }, [data]);
+    return CATEGORY_KEYS.map((c) => ({ key: c, n: map[c] ?? 0 }));
+  }, [monthEntries]);
+
+  // 이번 주 다가오는 일정 (오늘 이후 시작, 최대 6개)
+  const upcoming = useMemo(
+    () =>
+      [...data.leaves]
+        .filter((l) => l.start_date >= tISO && l.start_date <= toISO(week.end))
+        .sort((a, b) => (a.start_date < b.start_date ? -1 : 1))
+        .slice(0, 6),
+    [data.leaves, tISO, week.end]
+  );
+
+  const catMonthMax = Math.max(1, ...catMonth.map((c) => c.n));
 
   if (!ready)
     return <div className="text-sm text-slate-400">{t("common.loading")}</div>;
@@ -143,43 +126,19 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label={t("dash.todayLeavers")} value={`${todayLeaves.length}${t("common.people")}`} accent="#dc2626" />
-        <StatCard label={t("dash.weekLeavers")} value={`${weekLeaves.length}${t("common.cases")}`} accent="#d97706" />
-        <StatCard label={t("dash.monthLeavers")} value={`${monthLeaves.length}${t("common.cases")}`} accent="#2563eb" />
+        <StatCard label={t("dash.todayLeavers")} value={`${todayEntries.length}${t("common.cases")}`} accent="#2563eb" />
+        <StatCard label={t("dash.weekLeavers")} value={`${weekEntries.length}${t("common.cases")}`} accent="#16a34a" />
+        <StatCard label={t("dash.monthLeavers")} value={`${monthEntries.length}${t("common.cases")}`} accent="#7c3aed" />
         <StatCard
           label={t("dash.riskAlerts")}
-          value={`${risks.length}${t("common.cases")}`}
+          value={`${awayToday.length}${t("common.people")}`}
           hint={t("dash.next14")}
-          accent={risks.length ? "#dc2626" : "#059669"}
+          accent="#d97706"
         />
       </div>
 
-      {risks.length > 0 && (
-        <Card className="mt-4 border-red-200 bg-red-50/60 p-4 dark:border-red-500/30 dark:bg-red-500/10">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
-            <AlertTriangle size={16} /> {t("dash.riskTitle")}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {risks.slice(0, 12).map((r, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2 py-1 text-xs dark:border-red-500/30 dark:bg-slate-900"
-              >
-                <TeamChip team={r.team} />
-                <span className="font-medium text-slate-700 dark:text-slate-200">
-                  {fmtDate(r.date, lang)}
-                </span>
-                <span className="text-red-600 dark:text-red-400">
-                  {r.count}
-                  {t("common.people")} ({t("dash.threshold")} {r.threshold})
-                </span>
-              </span>
-            ))}
-          </div>
-        </Card>
-      )}
-
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* 오늘 일정 */}
         <Card className="p-4 lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -192,55 +151,44 @@ export default function DashboardPage() {
               <CalendarDays size={14} /> {t("nav.calendar")}
             </Link>
           </div>
-          {todayLeaves.length === 0 ? (
+          {todayEntries.length === 0 ? (
             <EmptyState text={t("dash.noTodayLeave")} />
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {todayLeaves.map((l) => {
-                const emp = empById[l.employee_id];
-                return (
-                  <div key={l.id} className="flex items-center justify-between py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                        {emp?.name ?? "—"}
-                      </span>
-                      <TeamChip team={l.team} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <LeaveTypeChip type={l.leave_type} />
-                      <StatusChip status={l.status} />
-                    </div>
+              {todayEntries.map((l) => (
+                <div key={l.id} className="flex items-center justify-between gap-2 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {empById[l.employee_id]?.name ?? "—"}
+                    </span>
+                    <TeamChip team={l.team} />
+                    <span className="truncate text-xs text-slate-400">{l.reason}</span>
                   </div>
-                );
-              })}
+                  <LeaveTypeChip type={l.leave_type} />
+                </div>
+              ))}
             </div>
           )}
         </Card>
 
+        {/* 팀별 오늘 일정 수 */}
         <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
             {t("dash.teamTodayCount")}
           </h2>
           <div className="space-y-2.5">
             {teamNames.map((tm) => {
-              const total = data.employees.filter(
-                (e) => e.team === tm && e.employment_status === "재직"
-              ).length;
               const c = teamTodayCount[tm] ?? 0;
-              const pct = total ? (c / total) * 100 : 0;
+              const total = data.employees.filter((e) => e.team === tm).length;
+              const pct = total ? Math.min(100, (c / total) * 100) : 0;
               return (
                 <div key={tm}>
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <TeamChip team={tm} />
-                    <span className="text-slate-500 dark:text-slate-400">
-                      {c} / {total}
-                    </span>
+                    <span className="text-slate-500 dark:text-slate-400">{c}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${pct}%`, backgroundColor: teamColor(tm) }}
-                    />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: teamColor(tm) }} />
                   </div>
                 </div>
               );
@@ -248,51 +196,52 @@ export default function DashboardPage() {
           </div>
         </Card>
 
+        {/* 이번 주 다가오는 일정 */}
         <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
             {t("dash.bottomRemaining")}
           </h2>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {bottomRemaining.map(({ emp, sum }) => (
-              <div key={emp.id} className="flex items-center justify-between py-2 text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="font-medium text-slate-800 dark:text-slate-100">
-                    {emp.name}
-                  </span>
-                  <TeamChip team={emp.team} />
-                </span>
-                <span className="font-semibold text-red-600 dark:text-red-400">
-                  {sum.remaining}
-                  {t("common.days")}
-                </span>
-              </div>
-            ))}
-          </div>
+          {upcoming.length === 0 ? (
+            <EmptyState text={t("teams.noUpcoming")} />
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {upcoming.map((l) => (
+                <div key={l.id} className="py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-800 dark:text-slate-100">
+                      {empById[l.employee_id]?.name}
+                    </span>
+                    <LeaveTypeChip type={l.leave_type} />
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {fmtDate(l.start_date, lang)}
+                    {l.start_date !== l.end_date && ` ~ ${fmtDate(l.end_date, lang)}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
+        {/* 이번 달 카테고리별 건수 */}
         <Card className="p-4 lg:col-span-2">
           <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
             {t("dash.topUsage")}
           </h2>
           <div className="space-y-2.5">
-            {topUsage.map(({ emp, sum }) => (
-              <div key={emp.id}>
+            {catMonth.map(({ key, n }) => (
+              <div key={key}>
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-2">
-                    <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {emp.name}
-                    </span>
-                    <TeamChip team={emp.team} />
-                  </span>
+                  <LeaveTypeChip type={key} />
                   <span className="text-slate-500 dark:text-slate-400">
-                    {sum.used} / {sum.entitlement + sum.carriedOver} (
-                    {Math.round(sum.usageRate * 100)}%)
+                    {n}
+                    {t("common.cases")}
                   </span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
-                    className="h-full rounded-full bg-brand-500"
-                    style={{ width: `${Math.min(100, sum.usageRate * 100)}%` }}
+                    className="h-full rounded-full"
+                    style={{ width: `${(n / catMonthMax) * 100}%`, backgroundColor: categoryColor(key) }}
                   />
                 </div>
               </div>

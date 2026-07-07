@@ -141,16 +141,14 @@ function mk(
 }
 
 const leaves: LeaveRequest[] = [
-  // OP팀 동시 휴가 → 리스크 경고 유발 (threshold 3)
-  mk("김운영", "Annual Leave", "2026-06-29", "2026-06-30", "none", "Approved", "개인 사유"),
-  mk("한지훈", "Annual Leave", "2026-06-29", "2026-07-01", "none", "Approved", "가족 여행"),
-  mk("서다은", "Half-day Leave", "2026-06-29", "2026-06-29", "PM", "Approved", "병원"),
-  // 다른 팀
-  mk("강도윤", "Sick Leave", "2026-06-29", "2026-06-29", "none", "Approved", "감기"),
-  mk("오민재", "Business Trip", "2026-07-02", "2026-07-04", "none", "Approved", "고객사 방문"),
-  mk("임수빈", "Annual Leave", "2026-07-06", "2026-07-10", "none", "Pending", "여름 휴가"),
-  mk("신예린", "Annual Leave", "2026-07-13", "2026-07-14", "none", "Approved", ""),
-  mk("조하늘", "Unpaid Leave", "2026-07-20", "2026-07-22", "none", "Approved", "개인 사정"),
+  mk("김운영", "Trip", "2026-06-29", "2026-07-01", "none", "Approved", "China Sales Call (심천)"),
+  mk("한지훈", "Fair", "2026-06-29", "2026-07-01", "none", "Approved", "Thai International Travel Fair"),
+  mk("서다은", "Personal", "2026-06-29", "2026-06-29", "none", "Approved", "개인 일정"),
+  mk("강도윤", "Internal", "2026-06-29", "2026-06-29", "none", "Approved", "OKR 미팅"),
+  mk("오민재", "Trip", "2026-07-02", "2026-07-04", "none", "Approved", "고객사 방문"),
+  mk("임수빈", "Personal", "2026-07-06", "2026-07-10", "none", "Approved", "여름 휴가"),
+  mk("신예린", "Fair", "2026-07-13", "2026-07-14", "none", "Approved", "박람회 부스"),
+  mk("조하늘", "Internal", "2026-07-20", "2026-07-22", "none", "Approved", "내부 업무"),
 ];
 
 export function buildSeed(): AppData {

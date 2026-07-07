@@ -48,7 +48,7 @@ export interface LeaveRequest {
   id: string;
   employee_id: string;
   team: TeamName; // 비정규화: 필터/캘린더 성능용
-  leave_type: LeaveTypeKey;
+  leave_type: string; // 일정 카테고리 키 (CategoryKey) — 하위호환 위해 컬럼명 유지
   start_date: string; // YYYY-MM-DD
   end_date: string; // YYYY-MM-DD
   days_count: number; // 계산된 실제 사용 일수
@@ -130,6 +130,31 @@ export const LEAVE_TYPE_KEYS: LeaveTypeKey[] = [
   "Public Holiday",
   "Other",
 ];
+
+// =============================================================
+// 일정 카테고리 (일정 공유 플랫폼)
+// =============================================================
+export type CategoryKey = "Fair" | "Trip" | "Internal" | "Personal" | "Other";
+
+export const CATEGORY_KEYS: CategoryKey[] = [
+  "Fair",
+  "Trip",
+  "Internal",
+  "Personal",
+  "Other",
+];
+
+export const CATEGORY_COLORS: Record<string, string> = {
+  Fair: "#16a34a", // 박람회/세일즈콜 — 초록
+  Trip: "#d97706", // 출장 — 노랑/주황
+  Internal: "#64748b", // 내부업무/OKR — 회색
+  Personal: "#7c3aed", // 개인/휴가 — 보라
+  Other: "#4f46e5", // 기타
+};
+
+export function categoryColor(key: string): string {
+  return CATEGORY_COLORS[key] ?? "#6366f1";
+}
 
 // 기본 6팀의 고정 색상 (알려진 팀은 색이 유지되도록)
 export const TEAM_COLORS: Record<string, string> = {

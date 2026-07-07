@@ -4,19 +4,18 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { Card, PageHeader, StatCard, EmptyState } from "@/components/ui";
-import { StatusChip, LeaveTypeChip } from "@/components/chips";
-import { summarizeEmployee } from "@/lib/leave-calc";
+import { LeaveTypeChip } from "@/components/chips";
 import { TeamName, teamColor } from "@/lib/types";
-import { fmtDate, todayISO } from "@/lib/date";
+import { fmtDate, todayISO, toISO, thisWeekRange, rangesOverlap } from "@/lib/date";
 
 export default function TeamsPage() {
   const { data } = useStore();
   const { t, lang } = useI18n();
   const [selected, setSelected] = useState<TeamName>("");
   const tISO = todayISO();
+  const week = thisWeekRange();
 
   const teamNames = data.teams.map((tm) => tm.team_name);
-  // 선택된 팀이 없거나 삭제됐으면 첫 팀으로 대체
   const team = teamNames.includes(selected) ? selected : teamNames[0] ?? "";
 
   const empById = useMemo(
@@ -31,24 +30,22 @@ export default function TeamsPage() {
   const active = members.filter((e) => e.employment_status === "재직");
   const teamMeta = data.teams.find((x) => x.team_name === team);
 
-  const summary = useMemo(() => {
-    let remaining = 0;
-    active.forEach((e) => {
-      remaining += summarizeEmployee(e, data).remaining;
-    });
-    return { remaining };
-  }, [active, data]);
+  // 이번 주 팀 일정 수
+  const weekCount = useMemo(
+    () =>
+      data.leaves.filter(
+        (l) =>
+          l.team === team &&
+          rangesOverlap(l.start_date, l.end_date, toISO(week.start), toISO(week.end))
+      ).length,
+    [data.leaves, team, week.start, week.end]
+  );
 
+  // 예정·진행 중 일정 (오늘 이후 종료)
   const upcoming = useMemo(
     () =>
       data.leaves
-        .filter(
-          (l) =>
-            l.team === team &&
-            l.status !== "Rejected" &&
-            l.status !== "Cancelled" &&
-            l.end_date >= tISO
-        )
+        .filter((l) => l.team === team && l.end_date >= tISO)
         .sort((a, b) => (a.start_date < b.start_date ? -1 : 1)),
     [data.leaves, team, tISO]
   );
@@ -78,14 +75,14 @@ export default function TeamsPage() {
         ))}
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label={t("teams.activeCount")} value={`${active.length}`} accent={teamColor(team)} />
         <StatCard label={t("teams.manager")} value={teamMeta?.manager_name ?? "—"} />
-        <StatCard label={t("teams.warnThreshold")} value={`${teamMeta?.warning_threshold ?? "-"}`} />
-        <StatCard label={t("teams.remainingSum")} value={`${summary.remaining}${t("common.days")}`} accent="#059669" />
+        <StatCard label={t("dash.weekLeavers")} value={`${weekCount}${t("common.cases")}`} accent="#16a34a" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* 팀원 명단 */}
         <Card className="overflow-x-auto p-0">
           <div className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-slate-800 dark:text-slate-100">
             {t("teams.memberLeave")}
@@ -93,46 +90,26 @@ export default function TeamsPage() {
           {active.length === 0 ? (
             <EmptyState text={t("teams.noMembers")} />
           ) : (
-            <table className="w-full min-w-[420px] text-sm">
+            <table className="w-full min-w-[320px] text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-500 dark:text-slate-400">
                   <th className="px-4 py-2 font-medium">{t("employees.col.name")}</th>
                   <th className="px-4 py-2 font-medium">{t("employees.col.position")}</th>
-                  <th className="px-4 py-2 text-right font-medium">{t("employees.col.used")}</th>
-                  <th className="px-4 py-2 text-right font-medium">{t("employees.col.remaining")}</th>
-                  <th className="px-4 py-2 text-right font-medium">{t("teams.col.usageRate")}</th>
                 </tr>
               </thead>
               <tbody>
-                {active.map((e) => {
-                  const s = summarizeEmployee(e, data);
-                  return (
-                    <tr key={e.id} className="border-t border-slate-50 dark:border-slate-800/60">
-                      <td className="px-4 py-2 font-medium text-slate-800 dark:text-slate-100">{e.name}</td>
-                      <td className="px-4 py-2 text-slate-500 dark:text-slate-400">{e.position}</td>
-                      <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{s.used}</td>
-                      <td className="px-4 py-2 text-right">
-                        <span
-                          className={
-                            s.remaining <= 3
-                              ? "font-semibold text-red-600 dark:text-red-400"
-                              : "font-semibold text-emerald-600 dark:text-emerald-400"
-                          }
-                        >
-                          {s.remaining}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right text-slate-500 dark:text-slate-400">
-                        {Math.round(s.usageRate * 100)}%
-                      </td>
-                    </tr>
-                  );
-                })}
+                {active.map((e) => (
+                  <tr key={e.id} className="border-t border-slate-50 dark:border-slate-800/60">
+                    <td className="px-4 py-2 font-medium text-slate-800 dark:text-slate-100">{e.name}</td>
+                    <td className="px-4 py-2 text-slate-500 dark:text-slate-400">{e.position}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
         </Card>
 
+        {/* 예정·진행 중 일정 */}
         <Card className="p-0">
           <div className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-slate-800 dark:text-slate-100">
             {t("teams.upcoming")}
@@ -144,16 +121,17 @@ export default function TeamsPage() {
               {upcoming.map((l) => (
                 <div key={l.id} className="flex items-center justify-between gap-2 px-4 py-2.5">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                        {empById[l.employee_id]?.name}
-                      </span>
-                      <StatusChip status={l.status} />
+                    <div className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {empById[l.employee_id]?.name}
+                      {l.reason ? (
+                        <span className="ml-1 text-xs font-normal text-slate-400">
+                          {l.reason}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="text-xs text-slate-400">
                       {fmtDate(l.start_date, lang)}
-                      {l.start_date !== l.end_date && ` ~ ${fmtDate(l.end_date, lang)}`} · {l.days_count}
-                      {t("common.days")}
+                      {l.start_date !== l.end_date && ` ~ ${fmtDate(l.end_date, lang)}`}
                     </div>
                   </div>
                   <LeaveTypeChip type={l.leave_type} />

@@ -8,7 +8,6 @@ import {
   Card,
   PageHeader,
   Button,
-  Field,
   Input,
   Select,
   EmptyState,
@@ -29,15 +28,9 @@ export default function SettingsPage() {
     addHoliday,
     deleteHoliday,
     resetAll,
-    rolloverYearEnd,
   } = useStore();
   const { t } = useI18n();
   const [newTeam, setNewTeam] = useState("");
-  const [closeYear, setCloseYear] = useState(2026);
-
-  function handleRollover() {
-    if (confirm(t("settings.yearEndConfirm"))) rolloverYearEnd(closeYear);
-  }
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -95,48 +88,6 @@ export default function SettingsPage() {
 
       <fieldset disabled={!isAdmin} className="m-0 border-0 p-0">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 연차 계산 기준 */}
-        <Card className="p-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
-            {t("settings.calcRule")}
-          </h2>
-          <div className="space-y-3">
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
-                {t("settings.excludeWeekends")}
-              </span>
-              <input
-                type="checkbox"
-                checked={data.settings.exclude_weekends}
-                onChange={(e) => updateSettings({ exclude_weekends: e.target.checked })}
-                className="h-4 w-4"
-              />
-            </label>
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
-                {t("settings.excludeHolidays")}
-              </span>
-              <input
-                type="checkbox"
-                checked={data.settings.exclude_holidays}
-                onChange={(e) => updateSettings({ exclude_holidays: e.target.checked })}
-                className="h-4 w-4"
-              />
-            </label>
-            <Field label={t("settings.defaultLeave")}>
-              <Input
-                type="number"
-                step="0.5"
-                value={data.settings.default_annual_leave}
-                onChange={(e) =>
-                  updateSettings({ default_annual_leave: Number(e.target.value) })
-                }
-              />
-            </Field>
-            <p className="text-xs text-slate-400">{t("settings.recalcNote")}</p>
-          </div>
-        </Card>
-
         {/* 팀별 경고 기준 */}
         <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -191,39 +142,6 @@ export default function SettingsPage() {
           </form>
         </Card>
 
-        {/* 휴가 유형 */}
-        <Card className="p-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
-            {t("settings.leaveTypeDeduct")}
-          </h2>
-          <div className="space-y-2">
-            {data.leaveTypes.map((lt) => (
-              <div
-                key={lt.id}
-                className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800"
-              >
-                <span className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                  <span
-                    className="h-3 w-3 rounded-sm"
-                    style={{ backgroundColor: lt.color_code }}
-                  />
-                  {lt.leave_type_name}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    lt.deduct_from_annual_leave
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
-                      : "bg-slate-100 text-slate-500 dark:bg-slate-700/40 dark:text-slate-400"
-                  }`}
-                >
-                  {lt.deduct_from_annual_leave ? t("settings.deduct") : t("settings.noDeduct")}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-slate-400">{t("settings.deductNote")}</p>
-        </Card>
-
         {/* 데이터 관리 */}
         <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -255,30 +173,6 @@ export default function SettingsPage() {
             placeholder="예: 1234"
           />
           <p className="mt-2 text-xs text-slate-400">{t("settings.adminPinHint")}</p>
-        </Card>
-
-        {/* 연말 이월 처리 */}
-        <Card className="p-4">
-          <h2 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
-            {t("settings.yearEnd")}
-          </h2>
-          <div className="flex items-end gap-2">
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">
-                {t("settings.yearEndYear")}
-              </span>
-              <Input
-                type="number"
-                value={closeYear}
-                onChange={(e) => setCloseYear(Number(e.target.value))}
-                className="w-28"
-              />
-            </label>
-            <Button variant="danger" onClick={handleRollover}>
-              {t("settings.yearEndRun")}
-            </Button>
-          </div>
-          <p className="mt-2 text-xs text-slate-400">{t("settings.yearEndHint")}</p>
         </Card>
       </div>
 

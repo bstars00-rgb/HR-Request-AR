@@ -16,7 +16,6 @@ import {
   EmptyState,
 } from "@/components/ui";
 import { TeamChip } from "@/components/chips";
-import { summarizeEmployee } from "@/lib/leave-calc";
 import {
   Employee,
   EMPLOYMENT_STATUSES,
@@ -39,30 +38,17 @@ export default function EmployeesPage() {
       "팀/Team",
       "직급/Position",
       "입사일/JoinDate",
-      "기본연차/Entitlement",
-      "이월/CarryOver",
-      "도입전사용/PriorUsed",
-      "사용/Used",
-      "잔여/Remaining",
       "상태/Status",
     ];
-    const rows = data.employees.map((e) => {
-      const s = summarizeEmployee(e, data);
-      return [
-        e.name,
-        e.english_name,
-        e.team,
-        e.position,
-        e.join_date,
-        e.annual_leave_entitlement,
-        e.carried_over_leave,
-        e.used_adjustment ?? 0,
-        s.used,
-        s.remaining,
-        e.employment_status,
-      ];
-    });
-    downloadCSV(`employees_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    const rows = data.employees.map((e) => [
+      e.name,
+      e.english_name,
+      e.team,
+      e.position,
+      e.join_date,
+      e.employment_status,
+    ]);
+    downloadCSV(`members_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   }
 
   const [team, setTeam] = useState<TeamName | "ALL">("ALL");
@@ -155,23 +141,19 @@ export default function EmployeesPage() {
         {filtered.length === 0 ? (
           <EmptyState text={t("employees.empty")} />
         ) : (
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[620px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
                 <th className={th}>{t("employees.col.name")}</th>
                 <th className={th}>{t("employees.col.team")}</th>
                 <th className={th}>{t("employees.col.position")}</th>
                 <th className={th}>{t("employees.col.joinDate")}</th>
-                <th className={`${th} text-right`}>{t("employees.col.baseCarry")}</th>
-                <th className={`${th} text-right`}>{t("employees.col.used")}</th>
-                <th className={`${th} text-right`}>{t("employees.col.remaining")}</th>
                 <th className={th}>{t("employees.col.status")}</th>
                 <th className={`${th} text-right`}>{t("common.manage")}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((e) => {
-                const s = summarizeEmployee(e, data);
                 return (
                   <tr
                     key={e.id}
@@ -188,21 +170,6 @@ export default function EmployeesPage() {
                     </td>
                     <td className={`${td} text-slate-600 dark:text-slate-300`}>{e.position}</td>
                     <td className={`${td} text-slate-500 dark:text-slate-400`}>{e.join_date}</td>
-                    <td className={`${td} text-right text-slate-600 dark:text-slate-300`}>
-                      {e.annual_leave_entitlement + e.carried_over_leave}
-                    </td>
-                    <td className={`${td} text-right text-slate-600 dark:text-slate-300`}>{s.used}</td>
-                    <td className={`${td} text-right`}>
-                      <span
-                        className={`font-semibold ${
-                          s.remaining <= 3
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-emerald-600 dark:text-emerald-400"
-                        }`}
-                      >
-                        {s.remaining}
-                      </span>
-                    </td>
                     <td className={td}>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${
@@ -370,33 +337,7 @@ function EmployeeFormModal({
               ))}
             </Select>
           </Field>
-          <Field label={t("employees.field.entitlement")}>
-            <Input
-              type="number"
-              step="0.5"
-              value={f.annual_leave_entitlement}
-              onChange={(e) => set("annual_leave_entitlement", Number(e.target.value))}
-            />
-          </Field>
-          <Field label={t("employees.field.carryover")}>
-            <Input
-              type="number"
-              step="0.5"
-              value={f.carried_over_leave}
-              onChange={(e) => set("carried_over_leave", Number(e.target.value))}
-            />
-          </Field>
-          <Field label={t("employees.field.priorUsed")}>
-            <Input
-              type="number"
-              step="0.5"
-              min={0}
-              value={f.used_adjustment}
-              onChange={(e) => set("used_adjustment", Number(e.target.value))}
-            />
-          </Field>
         </div>
-        <p className="-mt-1 text-xs text-slate-400">{t("employees.field.priorUsedHint")}</p>
         <Field label={t("employees.field.notes")}>
           <Input value={f.notes} onChange={(e) => set("notes", e.target.value)} />
         </Field>
