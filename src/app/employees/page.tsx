@@ -37,7 +37,6 @@ export default function EmployeesPage() {
       "영문명/English",
       "팀/Team",
       "직급/Position",
-      "입사일/JoinDate",
       "상태/Status",
     ];
     const rows = data.employees.map((e) => [
@@ -45,7 +44,6 @@ export default function EmployeesPage() {
       e.english_name,
       e.team,
       e.position,
-      e.join_date,
       e.employment_status,
     ]);
     downloadCSV(`members_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
@@ -147,7 +145,6 @@ export default function EmployeesPage() {
                 <th className={th}>{t("employees.col.name")}</th>
                 <th className={th}>{t("employees.col.team")}</th>
                 <th className={th}>{t("employees.col.position")}</th>
-                <th className={th}>{t("employees.col.joinDate")}</th>
                 <th className={th}>{t("employees.col.status")}</th>
                 <th className={`${th} text-right`}>{t("common.manage")}</th>
               </tr>
@@ -169,7 +166,6 @@ export default function EmployeesPage() {
                       <TeamChip team={e.team} />
                     </td>
                     <td className={`${td} text-slate-600 dark:text-slate-300`}>{e.position}</td>
-                    <td className={`${td} text-slate-500 dark:text-slate-400`}>{e.join_date}</td>
                     <td className={td}>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${
@@ -315,13 +311,6 @@ function EmployeeFormModal({
                 </option>
               ))}
             </Select>
-          </Field>
-          <Field label={t("employees.field.joinDate")}>
-            <Input
-              type="date"
-              value={f.join_date}
-              onChange={(e) => set("join_date", e.target.value)}
-            />
           </Field>
           <Field label={t("employees.field.status")}>
             <Select
