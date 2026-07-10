@@ -1,7 +1,8 @@
 -- =============================================================
 -- 2026 여행 박람회 일정 → 캘린더 배지 (notes = FAIR)
 -- Supabase SQL Editor 에 붙여넣고 RUN. 재실행해도 안전(기존 FAIR 삭제 후 재삽입).
--- 출처: CRM_GST_2025 Calendar 시트 (날짜 확정 32개 행사)
+-- 출처: CRM_GST_2025 (3).xlsx TravelMart/2026 Schedule 시트 (날짜 확정 36개 행사)
+-- ※ 이 파일은 src/lib/fairs.json 에서 생성됨 — fairs.json 수정 후 재생성할 것.
 -- =============================================================
 
 delete from holidays where notes = 'FAIR';
@@ -82,9 +83,17 @@ insert into holidays (date, country, holiday_name, applicable_team, notes) value
   ('2026-06-30', '싱가포르', 'ILTM Asia Pacific', 'ALL', 'FAIR'),
   ('2026-07-01', '싱가포르', 'ILTM Asia Pacific', 'ALL', 'FAIR'),
   ('2026-07-02', '싱가포르', 'ILTM Asia Pacific', 'ALL', 'FAIR'),
+  ('2026-06-30', '한국 서울', 'SITM', 'ALL', 'FAIR'),
+  ('2026-07-01', '한국 서울', 'SITM', 'ALL', 'FAIR'),
+  ('2026-07-10', '필리핀 마닐라', 'Travel Madness Expo', 'ALL', 'FAIR'),
+  ('2026-07-11', '필리핀 마닐라', 'Travel Madness Expo', 'ALL', 'FAIR'),
+  ('2026-07-12', '필리핀 마닐라', 'Travel Madness Expo', 'ALL', 'FAIR'),
   ('2026-08-18', '말레이시아 쿠칭', 'PATA Travel Mart', 'ALL', 'FAIR'),
   ('2026-08-19', '말레이시아 쿠칭', 'PATA Travel Mart', 'ALL', 'FAIR'),
   ('2026-08-20', '말레이시아 쿠칭', 'PATA Travel Mart', 'ALL', 'FAIR'),
+  ('2026-08-21', '싱가포르', 'NATAS Holidays', 'ALL', 'FAIR'),
+  ('2026-08-22', '싱가포르', 'NATAS Holidays', 'ALL', 'FAIR'),
+  ('2026-08-23', '싱가포르', 'NATAS Holidays', 'ALL', 'FAIR'),
   ('2026-09-02', '인도 뭄바이', 'ITB India', 'ALL', 'FAIR'),
   ('2026-09-03', '인도 뭄바이', 'ITB India', 'ALL', 'FAIR'),
   ('2026-09-04', '인도 뭄바이', 'ITB India', 'ALL', 'FAIR'),
@@ -94,6 +103,9 @@ insert into holidays (date, country, holiday_name, applicable_team, notes) value
   ('2026-09-10', '러시아 모스크바', 'OTDYKH Leisure', 'ALL', 'FAIR'),
   ('2026-09-11', '러시아 모스크바', 'OTDYKH Leisure', 'ALL', 'FAIR'),
   ('2026-09-12', '러시아 모스크바', 'OTDYKH Leisure', 'ALL', 'FAIR'),
+  ('2026-09-11', '중국 광저우', 'CITIE Tourism Expo', 'ALL', 'FAIR'),
+  ('2026-09-12', '중국 광저우', 'CITIE Tourism Expo', 'ALL', 'FAIR'),
+  ('2026-09-13', '중국 광저우', 'CITIE Tourism Expo', 'ALL', 'FAIR'),
   ('2026-09-24', '일본', 'Tourism EXPO Japan (TEJ)', 'ALL', 'FAIR'),
   ('2026-09-25', '일본', 'Tourism EXPO Japan (TEJ)', 'ALL', 'FAIR'),
   ('2026-09-26', '일본', 'Tourism EXPO Japan (TEJ)', 'ALL', 'FAIR'),

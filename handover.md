@@ -103,7 +103,11 @@ npm run build      # 정적 export → out/ (타입체크 포함)
 
 ## 12. 미완료 작업
 - [ ] **개인 일정 엑셀 가져오기** — cb_park의 SharePoint 엑셀(내 일정) 반영 요청이 있었으나 링크 403(사내 인증 필요)으로 보류. 파일을 로컬 다운로드 받아 전달하면 일괄 등록 SQL로 처리 가능.
-- [ ] 날짜 미정 박람회 4개 (MATTA Fair KL, WTM Africa, COTTM Beijing, VITM Hanoi) — 날짜 확정 시 `fairs.json`에 추가
+- [~] 날짜 미정 박람회 4개 — **2026-07-10 `스케줄/CRM_GST_2025 (3).xlsx`(2025-12-12 갱신) 대조 완료**:
+  - **COTTM Beijing** → 엑셀 "COITM 14–16 October Beijing" = `fairs.json`의 `China Outbound & Inbound Travel Market`(10/14–16)과 **동일 행사, 이미 반영됨** → 해소
+  - **MATTA Fair KL / WTM Africa / VITM Hanoi** → 엑셀에도 날짜 미확정(MATTA는 매트릭스 8월 칸 vs 텍스트 4월 상충, WTM Africa·VITM Hanoi는 날짜 칸 공란) → **여전히 보류**
+  - 대조 중 확인된 **신규 확정 박람회 4개를 fairs.json에 추가**(32→36): SITM(6/30–7/1 서울), Travel Madness Expo(7/10–12 마닐라 SMX), NATAS Holidays(8/21–23 싱가포르), CITIE Tourism Expo(9/11–13 광저우)
+  - ⚠️ **DB 미반영**: 위 4개는 `fairs.json`·`supabase/fairs_2026.sql`에만 반영됨. **Supabase 접근 확보 후 `fairs_2026.sql`을 SQL Editor에서 RUN**해야 실제 캘린더 배지에 표시됨(§13-4 이후).
 - [ ] (선택, 2차 로드맵) 로그인/권한(role 컬럼 준비됨), Teams 알림, 주간 보기, Excel 일괄 import UI
 
 ## 13. CEO Office 계정에서 이어서 해야 할 다음 작업
