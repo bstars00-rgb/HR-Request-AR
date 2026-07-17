@@ -143,12 +143,12 @@ export default function CalendarPage() {
         }
       />
 
-      <Card className="no-print mb-4 flex flex-wrap items-center gap-3 p-3">
+      <Card className="no-print mb-3 flex flex-wrap items-center gap-2 p-2">
         <div className="flex items-center gap-1">
           <Button variant="ghost" onClick={prev} aria-label={t("cal.prevMonth")}>
             <ChevronLeft size={18} />
           </Button>
-          <span className="min-w-[120px] text-center text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <span className="min-w-[104px] text-center text-sm font-semibold text-slate-800 dark:text-slate-100">
             {monthLabelL(year, month0, lang)}
           </span>
           <Button variant="ghost" onClick={next} aria-label={t("cal.nextMonth")}>
@@ -163,7 +163,7 @@ export default function CalendarPage() {
           <Select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value as TeamName | "ALL")}
-            className="w-auto"
+            className="!w-auto"
           >
             <option value="ALL">{t("common.allTeams")}</option>
             {data.teams.map((tm) => (
@@ -175,7 +175,7 @@ export default function CalendarPage() {
           <Select
             value={empFilter}
             onChange={(e) => setEmpFilter(e.target.value)}
-            className="w-auto"
+            className="!w-auto"
           >
             <option value="ALL">{t("common.allEmployees")}</option>
             {data.employees.map((e) => (
@@ -187,7 +187,7 @@ export default function CalendarPage() {
           <Select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-auto"
+            className="!w-auto"
           >
             <option value="ALL">{t("common.allTypes")}</option>
             {CATEGORY_KEYS.map((ty) => (
