@@ -245,16 +245,23 @@ export default function CalendarPage() {
                 } ${isAdmin ? "cursor-pointer hover:bg-brand-50/50 dark:hover:bg-slate-800/60" : ""}`}
               >
                 <div className="mb-1 flex items-start justify-between gap-1">
-                  <span
-                    className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 text-xs ${
-                      isToday
-                        ? "bg-brand-600 font-bold text-white"
-                        : isWeekend(d)
-                        ? "text-red-400"
-                        : "text-slate-500 dark:text-slate-400"
-                    } ${!inMonth ? "opacity-40" : ""}`}
-                  >
-                    {d.getDate()}
+                  <span className="flex shrink-0 items-center gap-1">
+                    <span
+                      className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+                        isToday
+                          ? "bg-brand-600 font-bold text-white"
+                          : isWeekend(d)
+                          ? "text-red-400"
+                          : "text-slate-500 dark:text-slate-400"
+                      } ${!inMonth ? "opacity-40" : ""}`}
+                    >
+                      {d.getDate()}
+                    </span>
+                    {isToday && (
+                      <span className="rounded-full bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {t("cal.today")}
+                      </span>
+                    )}
                   </span>
                   {dayBadges.length > 0 && (
                     <span className="flex min-w-0 flex-col items-end gap-0.5">
